@@ -1,3 +1,3 @@
 #!/bin/sh -l
-cd /bin/staticsites/
-./StaticSitesClient $INPUT_ACTION
+cd /bin/staticsites/ || true
+./StaticSitesClient "$INPUT_ACTION"
