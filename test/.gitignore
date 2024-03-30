@@ -1,0 +1,6 @@
+#
+# Hugo Test
+#
+
+# Intentionally not ignoring this so that we do not need to build the site during CI
+# public/
