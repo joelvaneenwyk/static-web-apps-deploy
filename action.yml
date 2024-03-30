@@ -1,8 +1,10 @@
 name: "Azure Static Web Apps Deploy"
 description: "Deploys an application to Azure Static Web Apps"
+
 branding:
   icon: "upload-cloud"
   color: "blue"
+
 inputs:
   action:
     description: "Action to perform"
@@ -55,9 +57,11 @@ inputs:
   data_api_location:
     description: "Directory location of the Data API configuration files"
     required: false
+
 outputs:
   static_web_app_url:
     description: "Url of the application"
+
 runs:
   using: "docker"
   image: "Dockerfile"
