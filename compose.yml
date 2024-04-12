@@ -12,6 +12,7 @@ services:
     volumes:
       - .:/github/workspace
     environment:
+      SKIP_DEPLOY_ON_MISSING_SECRETS: true
       ACTIONS_CACHE_URL:
       ACTIONS_ID_TOKEN_REQUEST_TOKEN:
       ACTIONS_ID_TOKEN_REQUEST_URL:

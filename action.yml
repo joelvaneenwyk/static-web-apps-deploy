@@ -15,6 +15,9 @@ inputs:
   azure_static_web_apps_api_token:
     description: "Required token"
     required: true
+  skip_deploy_on_missing_secrets:
+    description: "Skip deployment if secrets are missing"
+    required: false
   api_build_command:
     description: "Custom command for Oryx to run when building Azure Functions source code"
     required: false
