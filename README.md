@@ -7,8 +7,10 @@ This Github Action enables developers to build and publish their applications to
 
 ## Example
 
-```bash
-docker run --name "test_id_12345" --label "deadbeef" \
+```powershell
+docker run \
+    --name "test_id_12345" \
+    --label "deadbeef" \
     --workdir /github/workspace --rm \
     -e "GOPROXY" -e "GO111MODULE" \
     -e "SASS_VERSION" -e "DART_SASS_SHA_LINUX" \
@@ -61,7 +63,7 @@ docker run --name "test_id_12345" --label "deadbeef" \
     -e "ACTIONS_RESULTS_URL" \
     -e GITHUB_ACTIONS=true \
     -e CI=true \
-    -v "/var/run/docker.sock":"/var/run/docker.sock"
+    -v "/var/run/docker.sock":"/var/run/docker.sock" \
     -v "/home/runner/work/_temp/_github_home":"/github/home" \
     -v "/home/runner/work/_temp/_github_workflow":"/github/workflow" \
     -v "/home/runner/work/_temp/_runner_file_commands":"/github/file_commands" \
