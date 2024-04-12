@@ -1,12 +1,14 @@
 #
 # static-web-apps-deploy
 #
-
+name: gh-action-static-web-apps-deploy
 services:
   static-web-apps-deploy:
     build:
       context: .
       dockerfile: "Dockerfile"
+      args:
+        GOLANG_VERSION: "${GOLANG_VERSION:-1.20}"
     env_file:
       - .env
     volumes:
