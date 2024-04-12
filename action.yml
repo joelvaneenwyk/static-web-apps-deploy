@@ -68,3 +68,6 @@ outputs:
 runs:
   using: "docker"
   image: "Dockerfile"
+  args:
+    - ${{ inputs.action }}
+    - ${{ inputs.data_api_location }}

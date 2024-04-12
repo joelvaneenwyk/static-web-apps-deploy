@@ -20,10 +20,16 @@ setlocal EnableDelayedExpansion
     set "_name=static_web_apps_deploy"
     set "_tag=%_name%:latest"
     set "_container=%_name%_container"
-    call :Command docker build --progress=plain -t "!_tag!" "!_root!"
+
+    set BUILDKIT_PROGRESS=plain
+
+    call :Command docker build --no-cache --progress=plain -t "!_tag!" "!_root!"
     call :Command docker run ^
         -p 1313:1313 ^
         -it ^
+        --restart=no ^
+        --log-driver local --log-opt max-size=10m --log-opt max-file=3 ^
+        --workdir /github/workspace ^
         --rm ^
         -v "!_root!:/github/workspace" ^
         --name "!_container!" ^

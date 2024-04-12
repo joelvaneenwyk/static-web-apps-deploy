@@ -4,7 +4,7 @@
 name: static-web-apps-deploy
 
 services:
-  static-web-apps-deploy:
+  oryx:
     container_name: static-apps-client
     build:
       context: .
