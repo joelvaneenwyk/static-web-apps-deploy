@@ -9,7 +9,7 @@ setlocal EnableDelayedExpansion
     set "_command=!_command:  = !"
     set "_command=!_command:  = !"
     echo ##[cmd] !_command!
-    !_command!
+    call !_command!
 endlocal & exit /b %ERRORLEVEL%
 
 :$Main
