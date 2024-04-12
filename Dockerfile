@@ -3,6 +3,7 @@
 ARG GOLANG_VERSION=1.20
 ARG GOLANG_PATH=golang:$GOLANG_VERSION
 
+# hadolint ignore=DL3006
 FROM $GOLANG_PATH as golang
 
 FROM mcr.microsoft.com/appsvc/staticappsclient:stable
