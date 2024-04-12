@@ -1,19 +1,32 @@
 #
 # static-web-apps-deploy
 #
-name: gh-action-static-web-apps-deploy
+name: static-web-apps-deploy
+
 services:
   static-web-apps-deploy:
+    container_name: static-apps-client
     build:
       context: .
       dockerfile: "Dockerfile"
       args:
         GOLANG_VERSION: "${GOLANG_VERSION:-1.20}"
+        INPUT_ACTION: "${INPUT_ACTION:-build}"
+
     env_file:
       - .env
+
     volumes:
       - .:/github/workspace
+
     environment:
+      # App source code path
+      STATIC_APP_LOCATION: "${STATIC_OUTPUT_LOCATION:-./test/}"
+      # Api source code path - optional
+      STATIC_API_LOCATION:
+      # Built app content directory - optional
+      STATIC_OUTPUT_LOCATION: "${STATIC_OUTPUT_LOCATION:-./test/public}"
+
       SKIP_DEPLOY_ON_MISSING_SECRETS: true
       ACTIONS_CACHE_URL:
       ACTIONS_ID_TOKEN_REQUEST_TOKEN:
@@ -21,8 +34,8 @@ services:
       ACTIONS_RESULTS_URL:
       ACTIONS_RUNTIME_TOKEN:
       ACTIONS_RUNTIME_URL:
-      APP_LOCATION: ""
-      AZURE_STATIC_WEB_APPS_API_TOKEN: ""
+      APP_LOCATION:
+      AZURE_STATIC_WEB_APPS_API_TOKEN:
       CI: true
       DART_SASS_SHA_LINUX:
       DART_SASS_SHA_MACOS:
@@ -98,6 +111,3 @@ services:
       RUNNER_TOOL_CACHE:
       RUNNER_WORKSPACE:
       SASS_VERSION:
-      STATIC_API_LOCATION:
-      STATIC_APP_LOCATION:
-      STATIC_OUTPUT_LOCATION:

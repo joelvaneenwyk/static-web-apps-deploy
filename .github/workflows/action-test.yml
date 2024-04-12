@@ -28,7 +28,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: joelvaneenwyk/static-web-apps-deploy@develop
+      - uses: ./
         name: Test
         with:
           azure_static_web_apps_api_token: ""

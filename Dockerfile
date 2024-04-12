@@ -1,7 +1,11 @@
+ARG GOLANG_VERSION=1.20
+ARG GOLANG_PATH=golang:$GOLANG_VERSION
+
+FROM $GOLANG_PATH as golang
+
 FROM mcr.microsoft.com/appsvc/staticappsclient:stable
 
-ARG GOLANG_VERSION
-COPY --from=golang:${GOLANG_VERSION:-1.20} /usr/local/go/ /usr/local/go/
+COPY --from=golang /usr/local/go/ /usr/local/go/
 
 COPY entrypoint.sh /entrypoint.sh
 ENTRYPOINT ["sh", "/entrypoint.sh"]
