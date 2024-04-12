@@ -2,8 +2,45 @@
 
 This Github Action enables developers to build and publish their applications to Azure App Service Static Web Apps. This action utilizes [Oryx](https://github.com/microsoft/Oryx) to detect and build an application, then uploads the resulting application content, as well as any Azure Functions, to Azure.
 
-* [More information about Azure Static Web Apps](https://aka.ms/swadocs)
-* [More information about this GitHub Action Workflow](https://aka.ms/swaworkflowconfig)
+* [More information about Azure Static Web Apps](https://aka.ms/swaDocs)
+* [More information about this GitHub Action Workflow](https://aka.ms/swaWorkflowConfig)
+
+## CLI
+
+```bash
+StaticSitesClient 1.0.0
+Copyright (C) 2024 StaticSitesClient
+
+--verbose                       # Default: false,   Enables verbose logging
+--deploymentaction              # Default: N/A,     Specifies the action to run
+--workdir                       # Default: N/A,     Working directory of the repository
+--buildTimeoutInMinutes         # Default: N/A,     Time limit of oryx build in minutes
+--app                           # Default: N/A,     Directory of app source code
+--api                           # Default: N/A,     Directory of api source code
+--dataApi                       # Default: N/A,     Directory of data api configuration files
+--routesLocation                # Default: N/A,     Path to the routes file
+--configFileLocation            # Default: N/A,     Path to the staticwebapp.config.json file
+--outputLocation                # Default: N/A,     Directory of built application artifacts
+--appArtifactLocation           # Default: N/A,     Directory of built application artifacts
+--event                         # Default: N/A,     Filepath of the event json
+--apiToken                      # Default: N/A,     ApiToken
+--repoToken                     # Default: N/A,     RepoToken
+--appBuildCommand               # Default: N/A,     App Build Command
+--apiBuildCommand               # Default: N/A,     Api Build Command
+--repositoryUrl                 # Default: N/A,     Repository Url
+--deploymentEnvironment         # Default: N/A,     Deployment Environment
+--branch                        # Default: N/A,     Branch
+--deploymentProvider            # Default: N/A,     Deployment provider
+--skipAppBuild                  # Default: false,   Skips Oryx build for app folder
+--skipApiBuild                  # Default: false,   Skips Oryx build for api folder
+--skipDeployOnMissingSecrets    # Default: false,   Skips deployment if api token isn't specified.
+--isStaticExport                # Default: false,   Repository uses Static Export of Site
+--pullRequestTitle              # Pull request title for staging sites.
+--headBranch                    # Head branch name for staging sites.
+--productionBranch              # Production branch. When specified, deployments from other branches will be staging environments.
+--help                          # Display this help screen.
+--version                       # Display version information.
+```
 
 ## Example
 

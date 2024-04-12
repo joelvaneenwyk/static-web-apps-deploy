@@ -20,6 +20,7 @@ setlocal EnableDelayedExpansion
     set "_name=static_web_apps_deploy"
     set "_tag=%_name%:latest"
     set "_container=%_name%_container"
+    set "_label=%_name%_label"
 
     set BUILDKIT_PROGRESS=plain
 
@@ -33,6 +34,7 @@ setlocal EnableDelayedExpansion
         --rm ^
         -v "!_root!:/github/workspace" ^
         --name "!_container!" ^
+        --label "!_label!" ^
         -e STATIC_APP_LOCATION="./test/public" ^
         "!_tag!" %*
 endlocal & exit /b %errorlevel%
