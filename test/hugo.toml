@@ -1,3 +1,5 @@
+schema = 'https://json.schemastore.org/hugo-config'
+
 baseURL = 'https://github.com'
 languageCode = 'en-us'
 title = 'static-web-apps-deploy-test'
