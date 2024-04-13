@@ -64,6 +64,7 @@ inputs:
 outputs:
   static_web_app_url:
     description: "Url of the application"
+    value: ""
 
 runs:
   using: "composite"

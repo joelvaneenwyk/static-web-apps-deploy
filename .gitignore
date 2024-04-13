@@ -10,6 +10,8 @@ test/.hugo_build.lock
 dart-sass/
 dart-sass-*.tar.gz
 
+package-lock.json
+
 # User-specific files
 *.rsuser
 *.suo

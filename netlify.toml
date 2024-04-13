@@ -6,11 +6,4 @@ HUGO_BASEURL = "https://static-web-apps-deploy.netlify.app"
 
 [build]
 publish = "test/public"
-command = """\
-curl -LJO https://github.com/sass/dart-sass/releases/download/${DART_SASS_VERSION}/dart-sass-${DART_SASS_VERSION}-linux-x64.tar.gz && \
-tar -xf dart-sass-${DART_SASS_VERSION}-linux-x64.tar.gz && \
-rm dart-sass-${DART_SASS_VERSION}-linux-x64.tar.gz && \
-export PATH="./dart-sass:$PATH" && \
-cd test && \
-hugo --gc --minify --baseURL $HUGO_BASEURL
-"""
+command = "npm install && npm run build"
