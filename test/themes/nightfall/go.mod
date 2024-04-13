@@ -1,3 +1,3 @@
-module github.com/LordMathis/hugo-theme-nightfall
+module github.com/joelvaneenwyk/static-web-apps-deploy/test/themes/nightfall
 
-go 1.20
+go 1.22

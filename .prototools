@@ -2,8 +2,3 @@ act = "0.2.61"
 actionlint = "1.6.27"
 go = "1.22.2"
 hugo = "0.124.1"
-
-[plugins]
-act = "source:https://raw.githubusercontent.com/theomessin/proto-toml-plugins/master/act.toml"
-actionlint = "source:https://raw.githubusercontent.com/Phault/proto-toml-plugins/main/actionlint/plugin.toml"
-hugo = "source:https://raw.githubusercontent.com/z0rrn/proto-plugins/main/hugo/plugin-extended.toml"

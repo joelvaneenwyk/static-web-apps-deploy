@@ -1,12 +1,10 @@
-schema = 'https://json.schemastore.org/hugo-config'
-
 baseURL = 'https://github.com'
 languageCode = 'en-us'
-title = 'static-web-apps-deploy-test'
+title = 'static-web-apps-deploy'
 theme = "nightfall"
 
 [params]
-user = "info"
+user = "joelvaneenwyk"
 hostname = "github.com"
 footerHtml = 'CC-0, Built with <a href="https://gohugo.io" class="footerLink">Hugo</a> and <a href="https://github.com/LordMathis/hugo-theme-nightfall" class="footerLink">Nightfall</a> theme'
 sitedescription = 'Landing page for the test.'
