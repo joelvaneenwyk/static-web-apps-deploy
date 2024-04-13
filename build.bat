@@ -13,5 +13,11 @@ setlocal EnableDelayedExpansion
 endlocal & exit /b %ERRORLEVEL%
 
 :$Main
-    call :Command "%~dp0run.bat" build --appBuildCommand="hugo" --outputLocation="./test/public" --verbose=silly api="./test"
+    call :Command "%~dp0run.bat" ^
+        --workdir "/github/workspace" ^
+        --app "./test" --appBuildCommand="hugo" ^
+        --outputLocation="./test/public" ^
+        --verbose ^
+        --deploymentaction "" ^
+        --skipApiBuild --skipDeployOnMissingSecrets
 endlocal & exit /b %errorlevel%

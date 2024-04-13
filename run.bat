@@ -24,7 +24,7 @@ setlocal EnableDelayedExpansion
 
     set BUILDKIT_PROGRESS=plain
 
-    call :Command docker build --no-cache --progress=plain -t "!_tag!" "!_root!"
+    call :Command docker build --progress=plain -t "!_tag!" "!_root!"
     call :Command docker run ^
         -p 1313:1313 ^
         -it ^
