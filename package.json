@@ -13,7 +13,9 @@
   "scripts": {
     "build": "cd test && npm exec hugo-extended -- --config hugo.toml --gc --minify",
     "start": "cd test && npm exec hugo-extended -- server",
-    "deploy": "netlify deploy --build --prod --open --site static-web-apps-deploy"
+    "deploy": "netlify deploy --build --prod --open --site static-web-apps-deploy",
+    "docker:build": "docker build --progress=plain -t static-web-apps-deploy .",
+    "docker:run": "docker -p 1313:1313 -it --restart=no --log-driver local --log-opt max-size=10m --log-opt max-file=3 --workdir /github/workspace --rm -v \"$(pwd):/github/workspace\" --name \"static-web-apps-deploy\" --label \"static-web-apps-deploy\" -e STATIC_APP_LOCATION=\"./test/public\" \"static-web-apps-deploy\""
   },
   "author": "Joel Van Eenwyk",
   "license": "MIT",
