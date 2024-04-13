@@ -31,12 +31,10 @@ jobs:
       - uses: ./
         name: Test
         with:
-          azure_static_web_apps_api_token: ""
-          skip_deploy_on_missing_secrets: true
-          action: "upload"
-          app_location: ${{ env.STATIC_APP_LOCATION }}
-          api_location: ${{ env.STATIC_API_LOCATION }}
-          output_location: ${{ env.STATIC_OUTPUT_LOCATION }}
-
-          # Used for Github integrations (i.e. PR comments)
+          action: build
+          app_location: ./test
+          output_location: ./test/public
           repo_token: ${{ secrets.GITHUB_TOKEN }}
+          skip_deploy_on_missing_secrets: true
+        env:
+          HUGO_VERSION: 0.124.1
