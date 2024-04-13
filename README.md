@@ -55,9 +55,12 @@ docker run \
     -e "STATIC_APP_LOCATION" -e "STATIC_API_LOCATION" \
     -e "STATIC_OUTPUT_LOCATION" -e "pythonLocation" \
     -e "PKG_CONFIG_PATH" \
-    -e "Python_ROOT_DIR" -e "Python2_ROOT_DIR" \
-    -e "Python3_ROOT_DIR" -e "LD_LIBRARY_PATH" \
-    -e "INPUT_AZURE_STATIC_WEB_APPS_API_TOKEN" -e "INPUT_ACTION" \
+    -e "Python_ROOT_DIR" \
+    -e "Python2_ROOT_DIR" \
+    -e "Python3_ROOT_DIR" \
+    -e "LD_LIBRARY_PATH" \
+    -e "INPUT_AZURE_STATIC_WEB_APPS_API_TOKEN" \
+    -e "INPUT_ACTION" \
     -e "INPUT_APP_LOCATION" -e "INPUT_API_LOCATION" \
     -e "INPUT_OUTPUT_LOCATION" -e "INPUT_REPO_TOKEN" \
     -e "INPUT_API_BUILD_COMMAND" -e "INPUT_APP_ARTIFACT_LOCATION" \
