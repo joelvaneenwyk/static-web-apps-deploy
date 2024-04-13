@@ -11,7 +11,16 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-    - name: Build the Docker image
-      run: docker build . --file Dockerfile --tag static-web-apps-deploy:$(date +%s)
+      - uses: ./
+        name: Test
+        with:
+          action: build
+          app_location: ./test
+          output_location: ./test/public
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          skip_deploy_on_missing_secrets: true
+        env:
+          HUGO_VERSION: 0.122.0
+          SASS_VERSION: 1.70.0

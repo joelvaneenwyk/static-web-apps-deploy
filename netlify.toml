@@ -1,0 +1,11 @@
+#
+# static-web-apps-deploy | Netlify Configuration
+#
+
+HUGO_VERSION = "0.124.1"
+HUGO_ENV = "production"
+HUGO_BASEURL = "https://static-web-apps-deploy.netlify.app"
+
+[build]
+publish = "test/public"
+command = "npm install && npm run build"

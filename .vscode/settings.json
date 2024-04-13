@@ -1,0 +1,4 @@
+{
+    "go.goroot": "${env:USERPROFILE}/.proto/tools/go/1.22.2",
+    "go.toolsEnvVars": {}
+}

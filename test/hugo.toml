@@ -1,3 +1,19 @@
-baseURL = 'https://example.org/'
+baseURL = 'https://github.com'
 languageCode = 'en-us'
-title = 'My New Hugo Site'
+title = 'static-web-apps-deploy'
+theme = "nightfall"
+
+[params]
+user = "joelvaneenwyk"
+hostname = "github.com"
+footerHtml = 'CC-0, Built with <a href="https://gohugo.io" class="footerLink">Hugo</a> and <a href="https://github.com/LordMathis/hugo-theme-nightfall" class="footerLink">Nightfall</a> theme'
+sitedescription = 'Landing page for the test.'
+
+[params.author]
+name = "static-web-apps-deploy"
+email = "admin@static-web-apps-deploy.com"
+
+[[params.social]]
+key = 0
+name = "github"
+url = "https://github.com/joelvaneenwyk"
