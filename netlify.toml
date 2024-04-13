@@ -1,6 +1,8 @@
-[build.environment]
-DART_SASS_VERSION = "1.70.0"
-HUGO_VERSION = "0.122.0"
+#
+# static-web-apps-deploy | Netlify Configuration
+#
+
+HUGO_VERSION = "0.124.1"
 HUGO_ENV = "production"
 HUGO_BASEURL = "https://static-web-apps-deploy.netlify.app"
 

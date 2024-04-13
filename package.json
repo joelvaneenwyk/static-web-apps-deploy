@@ -12,7 +12,8 @@
   },
   "scripts": {
     "build": "cd test && npm exec hugo-extended -- --config hugo.toml --gc --minify",
-    "start": "cd test && npm exec hugo-extended -- server"
+    "start": "cd test && npm exec hugo-extended -- server",
+    "deploy": "netlify deploy --build --prod --open --site static-web-apps-deploy"
   },
   "author": "Joel Van Eenwyk",
   "license": "MIT",
