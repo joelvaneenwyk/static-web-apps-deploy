@@ -18,6 +18,5 @@ endlocal & exit /b %ERRORLEVEL%
         --app "./test" --appBuildCommand="hugo" ^
         --outputLocation="./test/public" ^
         --verbose ^
-        --deploymentaction "" ^
         --skipApiBuild --skipDeployOnMissingSecrets
 endlocal & exit /b %errorlevel%

@@ -65,17 +65,20 @@ outputs:
   static_web_app_url:
     description: "Url of the application"
 
-# runs:
-#   using: "composite"
-#   steps:
-#       - name: Set up Docker buildx
-#         uses: docker/setup-buildx-action@v3.0.0
-
 runs:
-  using: "docker"
-  image: "Dockerfile"
-  env:
-    DOCKER_BUILDKIT: "1"
-  args:
-    - ${{ inputs.action }}
-    - ${{ inputs.data_api_location }}
+  using: "composite"
+  steps:
+    - name: Set up Docker buildx
+      uses: docker/setup-buildx-action@v3.0.0
+      env:
+        DOCKER_BUILDKIT: "1"
+      with:
+        buildkitd-flags: --debug
+
+    - name: Build
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        # args:
+        #   - ${{ inputs.action }}
+        #   - ${{ inputs.data_api_location }}
