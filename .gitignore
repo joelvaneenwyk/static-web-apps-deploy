@@ -7,6 +7,9 @@ test/public/
 test/resources/
 test/.hugo_build.lock
 
+dart-sass/
+dart-sass-*.tar.gz
+
 # User-specific files
 *.rsuser
 *.suo
@@ -343,3 +346,6 @@ MigrationBackup/
 .flaskenv*
 !.env.project
 !.env.vault
+
+# Local Netlify folder
+.netlify
