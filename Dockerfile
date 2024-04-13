@@ -1,6 +1,6 @@
-# syntax=docker/dockerfile:labs
+# syntax=docker/dockerfile:1
 
-ARG GOLANG_VERSION=1.20
+ARG GOLANG_VERSION=1.22.2
 ARG GOLANG_PATH=golang:$GOLANG_VERSION
 
 # hadolint ignore=DL3006
