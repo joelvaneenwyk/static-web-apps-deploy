@@ -1,4 +1,6 @@
-# Custom Dictionary Words
+#
+# static-web-apps-deploy - CSpell Dictionary
+#
 ackages
 appxbundle
 appxupload
@@ -34,6 +36,8 @@ ipdb
 jmconfig
 localhistory
 mfractor
+msrc
+MSRC
 Nsight
 ntvs
 nunit

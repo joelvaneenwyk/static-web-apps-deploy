@@ -2,7 +2,7 @@ version: "0.2"
 ignorePaths: []
 dictionaryDefinitions:
   - name: cspell-static-web-apps-deploy
-    path: ./.cspell/cspell-static-web-apps-deploy.dict
+    path: ./.vscode/cspell-static-web-apps-deploy.dict
     addWords: true
 dictionaries:
   - cspell-static-web-apps-deploy

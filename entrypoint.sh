@@ -1,5 +1,4 @@
 #!/bin/sh -l
-# cspell:ignore StaticSites
 cd /bin/staticsites/ || true
 
 export HUGO_VERSION="${HUGO_VERSION:-0.122.0}"
