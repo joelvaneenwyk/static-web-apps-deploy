@@ -2,7 +2,7 @@ name: Test
 
 on:
   push:
-    branches: [main, develop]
+    branches: [main, develop, feature/**]
   pull_request:
     branches: [main, develop]
 
@@ -12,6 +12,10 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 'lts'
 
       - uses: ./
         name: Test
