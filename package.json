@@ -21,8 +21,8 @@
   "author": "Joel Van Eenwyk",
   "license": "MIT",
   "dependencies": {
-    "autoprefixer": "^10.4.19",
     "cross-env": "^7.0.3",
+    "autoprefixer": "^10.4.19",
     "hugo-extended": "^0.124.1",
     "postcss": "^8.4.38",
     "postcss-cli": "^11.0.0",
