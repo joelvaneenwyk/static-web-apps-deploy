@@ -1,11 +1,11 @@
 version: "0.2"
 ignorePaths: []
 dictionaryDefinitions:
-  - name: custom-dictionary
-    path: ./.cspell/custom-dictionary.txt
+  - name: cspell-static-web-apps-deploy
+    path: ./.cspell/cspell-static-web-apps-deploy.dict
     addWords: true
 dictionaries:
-  - custom-dictionary
+  - cspell-static-web-apps-deploy
 words: []
 ignoreWords: []
 import: []

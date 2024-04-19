@@ -3,6 +3,8 @@
 ##
 ## Get latest from https://github.com/github/gitignore/blob/master/VisualStudio.gitignore
 
+static-web-apps-deploy*.tgz
+
 test/public/
 test/resources/
 test/.hugo_build.lock
