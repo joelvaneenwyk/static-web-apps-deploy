@@ -6,6 +6,7 @@ appxupload
 binlog
 buildhelp
 BUILDKIT
+buildkitd
 buildx
 cachefile
 checkin
