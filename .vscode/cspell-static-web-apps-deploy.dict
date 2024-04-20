@@ -1,6 +1,5 @@
 #
 # static-web-apps-deploy - CSpell Dictionary
-#
 ackages
 appxbundle
 appxupload
@@ -10,6 +9,7 @@ BUILDKIT
 buildx
 cachefile
 checkin
+cmds
 codegen
 coveragexml
 csdef

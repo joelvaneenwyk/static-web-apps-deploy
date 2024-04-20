@@ -1,0 +1,57 @@
+# https://taskfile.dev
+
+version: "3"
+
+vars:
+  DOCKER_IMAGE_NAME: static-web-apps-deploy
+
+tasks:
+  default:
+    cmds:
+      - echo "{{.GREETING}}"
+    silent: true
+
+  docker-build:
+    internal: true
+    cmds:
+      - cmd: >-
+          docker build --progress=plain -t static-web-apps-deploy .
+
+  docker-run:
+    internal: true
+    deps: [docker-build]
+    vars:
+      ARGS: '{{ default "" .ARGS }}'
+    cmds:
+      - cmd: >-
+          docker run
+          -it
+          --rm
+          --restart=no
+          --log-driver local
+          --log-opt max-size=10m
+          --log-opt max-file=3
+          --workdir "/github/workspace"
+          -v "{{.ROOT_DIR}}:/github/workspace"
+          --name "static-web-apps-deploy"
+          --label "static-web-apps-deploy"
+          -e STATIC_APP_LOCATION="./test/public"
+          "static-web-apps-deploy"
+          {{.ARGS}}
+
+  run:
+    vars:
+      outputLocation: '{{ default "./test/public" .OUTPUT_LOCATION }}'
+      skipApiBuild: false
+      skipDeployOnMissingSecrets: false
+    cmds:
+      - task: docker-run
+        vars:
+          ARGS: >-
+            --verbose
+            --workdir "/github/workspace"
+            --app "./test"
+            --appBuildCommand="hugo"
+            --outputLocation="{{.outputLocation}}"
+            {{if .skipApiBuild}}--skipApiBuild{{end}}
+            {{if .skipDeployOnMissingSecrets}}--skipApiBuild{{skipDeployOnMissingSecrets}}
