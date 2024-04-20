@@ -13,9 +13,6 @@ services:
         GOLANG_VERSION: "${GOLANG_VERSION:-1.20}"
         INPUT_ACTION: "${INPUT_ACTION:-build}"
 
-    env_file:
-      - .env
-
     volumes:
       - .:/github/workspace
 
