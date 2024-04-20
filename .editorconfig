@@ -5,12 +5,20 @@ root = true
 
 [*]
 indent_style = space
-indent_size = 4
+indent_size = 8
 charset = utf-8
 trim_trailing_whitespace = true
 insert_final_newline = true
 
-[*.{json,yaml}]
+quote_type = double
+
+[*.{json,yaml,yml}]
+indent_size = 2
+
+[*.{scss,css}]
+indent_size = 2
+
+[*.{html,htm}]
 indent_size = 2
 
 [*.md]
