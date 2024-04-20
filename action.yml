@@ -80,7 +80,7 @@ runs:
       uses: docker/build-push-action@v5
       with:
         context: .
-        file: "Dockerfile"
+        file: Dockerfile
         tags: gha-static-web-apps-deploy:latest
         load: true
         cache-from: type=gha
