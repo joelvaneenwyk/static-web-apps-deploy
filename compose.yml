@@ -1,6 +1,7 @@
 #
 # static-web-apps-deploy
 #
+
 name: static-web-apps-deploy
 
 services:
@@ -8,7 +9,7 @@ services:
     container_name: static-apps-client
     build:
       context: .
-      dockerfile: "Dockerfile"
+      dockerfile: Dockerfile
       args:
         GOLANG_VERSION: "${GOLANG_VERSION:-1.20}"
         INPUT_ACTION: "${INPUT_ACTION:-build}"
