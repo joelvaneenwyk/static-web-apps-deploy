@@ -3,8 +3,6 @@ name: Test
 on:
   push:
     branches: [main, develop, feature/**]
-  pull_request:
-    branches: [main, develop]
 
 jobs:
   build:
@@ -15,7 +13,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: '20.x'
+          node-version: "20.x"
 
       - run: npm install
 
