@@ -15,6 +15,7 @@
     "start": "cd test && npm exec hugo-extended -- server",
     "deploy": "netlify deploy --build --prod --open --site static-web-apps-deploy",
     "test": "netlify deploy",
+    "prepack": "npm run build",
     "format": "prettier --write ."
   },
   "files": [
@@ -23,7 +24,10 @@
     "Dockerfile",
     "action.yml",
     "LICENSE",
-    "README.md"
+    "README.md",
+    "SECURITY.md",
+    "package.json",
+    "package-lock.json"
   ],
   "author": "Joel Van Eenwyk",
   "license": "MIT",

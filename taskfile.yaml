@@ -8,7 +8,13 @@ vars:
 
 tasks:
   default:
-    deps: [run]
+    cmds:
+      - task: run
+
+  init:
+    cmds:
+      - cmd: npm install
+      - cmd: npm run build
 
   docker-build:
     internal: true
@@ -39,6 +45,7 @@ tasks:
           {{.ARGS}}
 
   run:
+    deps: [init]
     vars:
       outputLocation: '{{ default "./test/public" .OUTPUT_LOCATION }}'
       skipApiBuild: "{{ default false .SKIP_API_BUILD }}"
