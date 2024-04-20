@@ -74,12 +74,23 @@ runs:
       env:
         DOCKER_BUILDKIT: "1"
       with:
-        buildkitd-flags: --debug
+        buildkid-flags: --debug
 
     - name: Build
       uses: docker/build-push-action@v5
       with:
         context: .
-        # args:
-        #   - ${{ inputs.action }}
-        #   - ${{ inputs.data_api_location }}
+        file: "Dockerfile"
+        tags: gha-static-web-apps-deploy:latest
+        load: true
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+        push: false
+
+    - name: Run
+      uses: addnab/docker-run-action@v3
+      with:
+        image: gha-static-web-apps-deploy:latest
+        run: >-
+          ${{ inputs.action }}
+          ${{ inputs.data_api_location }}
