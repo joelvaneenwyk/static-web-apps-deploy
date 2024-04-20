@@ -74,7 +74,7 @@ runs:
       env:
         DOCKER_BUILDKIT: "1"
       with:
-        buildkitd-flags: --debug
+        buildkid-flags: --debug
 
     - name: Build
       uses: docker/build-push-action@v5
