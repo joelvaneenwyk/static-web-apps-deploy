@@ -7,9 +7,7 @@ vars:
 
 tasks:
   default:
-    cmds:
-      - echo "{{.GREETING}}"
-    silent: true
+    deps: [run]
 
   docker-build:
     internal: true
@@ -42,8 +40,8 @@ tasks:
   run:
     vars:
       outputLocation: '{{ default "./test/public" .OUTPUT_LOCATION }}'
-      skipApiBuild: false
-      skipDeployOnMissingSecrets: false
+      skipApiBuild: "{{ default false .SKIP_API_BUILD }}"
+      skipDeployOnMissingSecrets: "{{ default false .SKIP_DEPLOY_ON_MISSING_SECRETS }}"
     cmds:
       - task: docker-run
         vars:
@@ -53,5 +51,5 @@ tasks:
             --app "./test"
             --appBuildCommand="hugo"
             --outputLocation="{{.outputLocation}}"
-            {{if .skipApiBuild}}--skipApiBuild{{end}}
-            {{if .skipDeployOnMissingSecrets}}--skipApiBuild{{skipDeployOnMissingSecrets}}
+            {{if eq .skipApiBuild "true"}}--skipApiBuild{{end}}
+            {{if eq .skipDeployOnMissingSecrets "true"}}--skipDeployOnMissingSecrets{{end}}
