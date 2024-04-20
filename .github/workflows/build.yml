@@ -19,7 +19,7 @@ jobs:
           node-version: "20.x"
 
       - run: npm install
-      - run: npm build
+      - run: npm run build
 
   test:
     needs: build
@@ -30,17 +30,13 @@ jobs:
           submodules: recursive
           fetch-depth: 0
 
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "20.x"
-
       - uses: ./
         name: Test
         with:
           action: build
           app_location: ./test
           output_location: ./test/public
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          repo_token: ${{ github.token }}
           skip_deploy_on_missing_secrets: true
         env:
           HUGO_VERSION: 0.122.0
