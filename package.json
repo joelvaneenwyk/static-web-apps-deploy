@@ -16,7 +16,8 @@
     "deploy": "netlify deploy --build --prod --open --site static-web-apps-deploy",
     "docker:build": "docker build --progress=plain -t static-web-apps-deploy .",
     "docker:run": "docker run -it --restart=no --log-driver local --log-opt max-size=10m --log-opt max-file=3 --workdir /github/workspace --rm -v \"$(pwd):/github/workspace\" --name \"static-web-apps-deploy\" --label \"static-web-apps-deploy\" -e STATIC_APP_LOCATION=\"./test/public\" \"static-web-apps-deploy\"",
-    "test": "netlify deploy"
+    "test": "netlify deploy",
+    "format": "prettier --write ."
   },
   "files": [
     "entrypoint.sh",
