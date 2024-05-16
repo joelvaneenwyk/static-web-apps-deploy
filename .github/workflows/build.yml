@@ -3,7 +3,9 @@ name: Validate Github Action
 on:
   push:
     branches: [main, develop, feature/**]
-
+  pull_request:
+    branches: [main, develop, feature/**]
+  
 jobs:
   build:
     runs-on: ubuntu-latest
