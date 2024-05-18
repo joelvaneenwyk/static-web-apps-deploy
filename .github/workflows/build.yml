@@ -2,9 +2,9 @@ name: Validate Github Action
 
 on:
   push:
-    branches: [main, develop, feature/**]
+    branches: [main, develop]
   pull_request:
-    branches: [main, develop, feature/**]
+    branches: [main, develop]
 
 jobs:
   build:
