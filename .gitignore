@@ -5,14 +5,15 @@
 
 static-web-apps-deploy*.tgz
 
+sass_embedded/
+sass_embedded-*.tar.gz
+
 test/public/
 test/resources/
 test/.hugo_build.lock
 
 dart-sass/
 dart-sass-*.tar.gz
-
-package-lock.json
 
 # User-specific files
 *.rsuser

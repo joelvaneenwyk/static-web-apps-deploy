@@ -8,4 +8,4 @@ HUGO_BASEURL = "https://static-web-apps-deploy.netlify.app"
 
 [build]
 publish = "test/public"
-command = "npm install && npm run build"
+command = "./build.sh"

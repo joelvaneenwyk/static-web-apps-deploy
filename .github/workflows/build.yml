@@ -16,8 +16,40 @@ jobs:
           submodules: recursive
           fetch-depth: 0
 
-      - name: Install Dart Sass
-        run: sudo snap install dart-sass
+      - name: Setup Hugo
+        run: |
+          wget -O ${{ runner.temp }}/hugo.deb https://github.com/gohugoio/hugo/releases/download/v${HUGO_VERSION}/hugo_extended_${HUGO_VERSION}_linux-amd64.deb \
+          && sudo dpkg -i ${{ runner.temp }}/hugo.deb
+
+      - name: Setup Embedded Dart Sass
+        run: sudo snap install dart-sass-embedded
+
+      - if: matrix.os == 'ubuntu-latest'
+        name: Install dart-sass Linux
+        run: |
+          echo "Install Dart Sass version ${SASS_VERSION} ..."
+          curl -LJO "https://github.com/sass/dart-sass/releases/download/${SASS_VERSION}/dart-sass-${SASS_VERSION}-linux-x64.tar.gz";
+          echo "${DART_SASS_SHA_LINUX}  dart-sass-${SASS_VERSION}-linux-x64.tar.gz" | sha256sum -c;
+          tar -xvf "dart-sass-${SASS_VERSION}-linux-x64.tar.gz";
+          echo "$GOBIN"
+          echo "$GITHUB_WORKSPACE/dart-sass/" >> $GITHUB_PATH
+
+      - if: matrix.os == 'macos-latest'
+        name: Install dart-sass MacOS
+        run: |
+          echo "Install Dart Sass version ${SASS_VERSION} ..."
+          curl -LJO "https://github.com/sass/dart-sass/releases/download/${SASS_VERSION}/dart-sass-${SASS_VERSION}-macos-x64.tar.gz";
+          echo "${DART_SASS_SHA_MACOS}  dart-sass-${SASS_VERSION}-macos-x64.tar.gz" | shasum -a 256 -c;
+          tar -xvf "dart-sass-${SASS_VERSION}-macos-x64.tar.gz";
+          echo "$GITHUB_WORKSPACE/dart-sass/" >> $GITHUB_PATH
+
+      - if: matrix.os == 'windows-latest'
+        name: Install dart-sass Windows
+        run: |
+          echo "Install Dart Sass version ${env:SASS_VERSION} ..."
+          curl -LJO "https://github.com/sass/dart-sass/releases/download/${env:SASS_VERSION}/dart-sass-${env:SASS_VERSION}-windows-x64.zip";
+          Expand-Archive -Path "dart-sass-${env:SASS_VERSION}-windows-x64.zip" -DestinationPath .;
+          echo  "$env:GITHUB_WORKSPACE/dart-sass/" | Out-File -FilePath $Env:GITHUB_PATH -Encoding utf-8 -Append
 
       - uses: actions/setup-node@v4
         with:
