@@ -82,7 +82,6 @@ runs:
       with:
         buildkitd-flags: --debug
         cleanup: false
-        cache-binary: true
 
     - name: Build
       uses: docker/build-push-action@v6
