@@ -13,7 +13,7 @@
   "scripts": {
     "build": "npm run build:info && npm run build:hugo",
     "build:info": "sass --version && postcss --version && autoprefixer --version && hugo version",
-    "build:hugo": "hugo --source ./test/ --verbose --forceSyncStatic --buildDrafts --buildExpired --buildFuture --cleanDestinationDir --logLevel=debug --gc --enableGitInfo",
+    "build:hugo": "hugo --source ./test/ --verbose -e production --forceSyncStatic --buildExpired --buildFuture --cleanDestinationDir --logLevel debug --gc --enableGitInfo --printI18nWarnings --printMemoryUsage --printPathWarnings --printUnusedTemplates --ignoreCache",
     "start": "cd test && hugo server",
     "prepack": "npm run build",
     "format": "prettier --write ."
@@ -33,11 +33,8 @@
   "license": "MIT",
   "dependencies": {
     "autoprefixer": "^10.4.19",
-    "cross-env": "^7.0.3",
     "postcss": "^8.4.38",
     "postcss-cli": "^11.0.0",
-    "prettier": "^3.3.2",
-    "sass": "^1.77.6",
-    "shx": "^0.3.4"
+    "prettier": "^3.3.2"
   }
 }
