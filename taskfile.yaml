@@ -23,6 +23,7 @@ tasks:
   install-brew:
     status:
       - test -f "{{ .BREW }}"
+      - brew --version
     cmds:
       - cmd: |
           /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
@@ -43,7 +44,7 @@ tasks:
     cmds:
       - cmd: '"{{ .BREW }}" install sass/sass/sass'
         platforms: [darwin, linux]
-      - cmd: 'scoop install sass'
+      - cmd: "scoop install sass"
         platforms: [windows]
 
   init-build:
@@ -176,14 +177,14 @@ tasks:
     vars:
       SKIP_DEPLOY_ON_MISSING_SECRETS: true
       SKIP_APP_BUILD: true
-      APP_LOCATION: '{{ .TASKFILE_DIR }}/test/public'
-      DOCKER_APP_LOCATION: '/root/build'
+      APP_LOCATION: "{{ .TASKFILE_DIR }}/test/public"
+      DOCKER_APP_LOCATION: "/root/build"
     # https://github.com/Azure/static-web-apps/issues/679#issuecomment-1357799789
     # skip_deploy_on_missing_secrets: true
     # ABOVE: this one is documented in few places, but it's expected to be a ENV var!
     # see https://github.com/Azure/static-web-apps/issues/679
     env:
-      SKIP_DEPLOY_ON_MISSING_SECRETS: '{{ .SKIP_DEPLOY_ON_MISSING_SECRETS }}'
+      SKIP_DEPLOY_ON_MISSING_SECRETS: "{{ .SKIP_DEPLOY_ON_MISSING_SECRETS }}"
     cmds:
       - cmd: >-
           docker run --entrypoint "/bin/staticsites/StaticSitesClient"
@@ -193,4 +194,3 @@ tasks:
           --skipAppBuild {{ .SKIP_APP_BUILD }}
           --app "{{ .DOCKER_APP_LOCATION }}"
           --apiToken "{{ .AZURE_STATIC_WEB_APPS_API_TOKEN }}"
-
