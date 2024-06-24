@@ -3,6 +3,9 @@
 
 version: "3"
 
+dotenv:
+  - .env
+
 vars:
   DOCKER_IMAGE_NAME: static-web-apps-deploy
 
@@ -61,3 +64,44 @@ tasks:
             --outputLocation="{{.outputLocation}}"
             {{if eq .skipApiBuild "true"}}--skipApiBuild{{end}}
             {{if eq .skipDeployOnMissingSecrets "true"}}--skipDeployOnMissingSecrets{{end}}
+
+  run-swa:
+    vars:
+      SKIP_DEPLOY_ON_MISSING_SECRETS: true
+      SKIP_APP_BUILD: true
+      APP_LOCATION: '{{ .TASKFILE_DIR }}/test/public'
+      DOCKER_APP_LOCATION: '/root/build'
+    # https://github.com/Azure/static-web-apps/issues/679#issuecomment-1357799789
+    # skip_deploy_on_missing_secrets: true
+    # ABOVE: this one is documented in few places, but it's expected to be a ENV var!
+    # see https://github.com/Azure/static-web-apps/issues/679
+    env:
+      SKIP_DEPLOY_ON_MISSING_SECRETS: '{{ .SKIP_DEPLOY_ON_MISSING_SECRETS }}'
+    cmds:
+      - cmd: >-
+          docker run --entrypoint "/bin/staticsites/StaticSitesClient"
+          --volume "{{ fromSlash .APP_LOCATION }}":"{{ .DOCKER_APP_LOCATION }}"
+          mcr.microsoft.com/appsvc/staticappsclient:stable
+          upload
+          --skipAppBuild {{ .SKIP_APP_BUILD }}
+          --app "{{ .DOCKER_APP_LOCATION }}"
+          --apiToken "{{ .AZURE_STATIC_WEB_APPS_API_TOKEN }}"
+
+  get-binaries:
+    vars:
+      linux_url: "https://swalocaldeploy.azureedge.net/downloads/1.0.020981/linux/StaticSitesClient"
+      linux_sha: "e55db21d0720a12098804559152303e66846bdd94c13a30b30be29a0fc9ae366"
+
+      win_url: "https://swalocaldeploy.azureedge.net/downloads/1.0.020981/windows/StaticSitesClient.exe"
+      win_sha: "4e4eb72aef26641e236c24929c822500e956bda099ca78054112cadf20261107"
+
+      osx_url: "https://swalocaldeploy.azureedge.net/downloads/1.0.020981/macOS/StaticSitesClient"
+      osx_sha: "e0f2ae7ec297510a1b3b9332c0dc0dd962a51adb8ea13cd4f3746d79fc24a7e9"
+    cmds:
+      - cmd: 'mkdir -p .bin'
+      - cmd: 'curl -L -o ./.bin/StaticSitesClient {{ .linux_url }}'
+      - cmd: 'chmod +x ./.bin/StaticSitesClient'
+
+
+
+

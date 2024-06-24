@@ -2,19 +2,19 @@
   "name": "static-web-apps-deploy",
   "version": "1.0.0",
   "description": "This Github Action enables developers to build and publish their applications to Azure App Service Static Web Apps. This action utilizes [Oryx](https://github.com/microsoft/Oryx) to detect and build an application, then uploads the resulting application content, as well as any Azure Functions, to Azure.",
-  "packageManager": "npm@10.8.0+sha256.00f8f31f9847fec0e5615b5571555c3e766a4601431c0817bf6e4b73668571ae",
+  "packageManager": "npm@10.8.1+sha512.0e9d42e92bd2318408ed81eaff2da5f78baf23ee7d12a6eed44a6e2901d0f29d7ab715d1b918ade601f72e769a824d9a5c322383f22bbbda5dd396e79de2a077",
   "engines": {
     "node": ">=18",
-    "npm": "^10.8"
+    "npm": ">=10"
   },
   "directories": {
     "test": "test"
   },
   "scripts": {
-    "build": "cd test && hugo --config hugo.toml --gc --minify",
+    "build": "npm run build:info && npm run build:hugo",
+    "build:info": "sass --version && postcss --version && autoprefixer --version && hugo version",
+    "build:hugo": "hugo --source ./test/ --verbose --forceSyncStatic --buildDrafts --buildExpired --buildFuture --cleanDestinationDir --logLevel=debug --gc --enableGitInfo",
     "start": "cd test && hugo server",
-    "deploy": "netlify deploy --build --prod --open --site static-web-apps-deploy",
-    "test": "netlify deploy",
     "prepack": "npm run build",
     "format": "prettier --write ."
   },
@@ -34,12 +34,10 @@
   "dependencies": {
     "autoprefixer": "^10.4.19",
     "cross-env": "^7.0.3",
-    "hugo-extended": "^0.126.1",
-    "netlify-cli": "^17.23.5",
     "postcss": "^8.4.38",
     "postcss-cli": "^11.0.0",
-    "prettier": "^3.2.5",
-    "sass": "^1.77.2",
+    "prettier": "^3.3.2",
+    "sass": "^1.77.6",
     "shx": "^0.3.4"
   }
 }

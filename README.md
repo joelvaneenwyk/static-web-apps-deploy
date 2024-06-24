@@ -5,6 +5,20 @@ This Github Action enables developers to build and publish their applications to
 * [More information about Azure Static Web Apps](https://aka.ms/swaDocs)
 * [More information about this GitHub Action Workflow](https://aka.ms/swaWorkflowConfig)
 
+## Implementation
+
+This is essentially just a wrapper for the Docker container at `mcr.microsoft.com/appsvc/staticappsclient:stable` with some syntatic sugar and useful defaults. Here is an example of how to call the container manually as shown in [Option For Manual Deployment (Outside Of Actions)](https://github.com/Azure/static-web-apps/issues/96#issuecomment-841072249):
+
+```bash
+docker run --entrypoint "/bin/staticsites/StaticSitesClient" \
+  --volume "$(pwd)"/build:/root/build \
+  mcr.microsoft.com/appsvc/staticappsclient:stable \
+  upload \
+  --skipAppBuild true \
+  --app "/root/build" \
+  --apiToken "<token>"
+```
+
 ## CLI
 
 ```bash

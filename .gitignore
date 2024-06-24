@@ -3,6 +3,9 @@
 ##
 ## Get latest from https://github.com/github/gitignore/blob/master/VisualStudio.gitignore
 
+.fnm/
+.bin/
+
 static-web-apps-deploy*.tgz
 
 sass_embedded/

@@ -1,18 +1,34 @@
 #!/usr/bin/env bash
-cd /bin/staticsites/ || true
 
-export HUGO_VERSION="${HUGO_VERSION:-0.122.0}"
+set -eax
 
 echo "##[cmd] entrypoint.sh $*"
+export HUGO_VERSION="${HUGO_VERSION:-0.122.0}"
+export INPUT_ACTION="${INPUT_ACTION:-${1:-build}}"
 
-if [[ -z "${INPUT_ACTION:-}" ]] && [[ -z "$*" ]]; then
-  echo "##[cmd] StaticSitesClient build $*"
-  ./StaticSitesClient build "$@"
-elif [[ "${1:-}" == sh* ]]; then
-  echo "No action specified, launching shell."
-  echo "##[cmd] $*"
-  "$@"
+if [[ "${INPUT_ACTION:-}" = "${1:-}" ]]; then
+  shift
+fi
+
+if [ -e "./.bin/StaticSitesClient" ]; then
+  export SWA=./.bin/StaticSitesClient
+elif [ -e /bin/staticsites/StaticSitesClient ]; then
+  export SWA=./.bin/StaticSitesClient
 else
-  echo "##[cmd] StaticSitesClient $*"
-  ./StaticSitesClient "$@"
+    echo "##[error] Could not find StaticSitesClients"
+    exit 1
+fi
+
+if [ -f "${SWA:-}" ]; then
+  cd /bin/staticsites/ || true
+
+  if [[ "${1:-}" == sh* ]] || [[ "${1:-}" == bash* ]]; then
+    ARGS=$*
+    echo "No action specified, passing all arguments to shell directly."
+  else
+    ARGS=("${SWA:-}" "${INPUT_ACTION}" "$@")
+  fi
+
+  echo "##[cmd] ${ARGS[*]}"
+  "${ARGS[@]}"
 fi
