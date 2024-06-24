@@ -5,6 +5,7 @@
 
 .fnm/
 .bin/
+.idea/
 
 static-web-apps-deploy*.tgz
 

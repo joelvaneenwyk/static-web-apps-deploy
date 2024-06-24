@@ -40,7 +40,7 @@ fi
 
 dart-sass-embedded --version
 
-HUGO_VERSION=0.126.1
+HUGO_VERSION=0.127.0
 wget -O "${TMP_DIR}/hugo.deb" "https://github.com/gohugoio/hugo/releases/download/v${HUGO_VERSION}/hugo_extended_${HUGO_VERSION}_linux-amd64.deb"
 sudo dpkg -i "${TMP_DIR}/hugo.deb"
 hugo version

@@ -6,17 +6,6 @@ on:
   pull_request:
     branches: [main, develop]
 
-env:
-  HUGO_VERSION: 0.126.1
-
-  GOPROXY: https://proxy.golang.org
-  GO111MODULE: on
-
-  SASS_VERSION: 1.63.2
-  DART_SASS_SHA_LINUX: 3ea33c95ad5c35fda6e9a0956199eef38a398f496cfb8750e02479d7d1dd42af
-  DART_SASS_SHA_MACOS: 11c70f259836b250b44a9cb57fed70e030f21f45069b467d371685855f1eb4f0
-  DART_SASS_SHA_WINDOWS: cd8cd36a619dd8e27f93d3186c52d70eb7d69472aa6c85f5094b29693e773f64
-
 jobs:
   build:
     strategy:
@@ -31,10 +20,9 @@ jobs:
           submodules: recursive
           fetch-depth: 0
 
-      - name: Setup Hugo
-        run: |
-          wget -O "${{ runner.temp }}/hugo.deb" "https://github.com/gohugoio/hugo/releases/download/v${HUGO_VERSION}/hugo_extended_${HUGO_VERSION}_linux-amd64.deb"
-          sudo dpkg -i "${{ runner.temp }}/hugo.deb"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "stable"
 
       - name: Install Homebrew
         run: |
@@ -44,15 +32,15 @@ jobs:
         env:
           NONINTERACTIVE: 1
 
+      - name: Setup Hugo
+        run: |
+          brew install hugo
+          hugo version
+
       - name: Setup Embedded Dart Sass
-        run: brew install sass/sass/sass
-
-      - name: Validate SASS
-        run: sass --embedded --version
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "20.x"
+        run: |
+          brew install sass/sass/sass
+          sass --embedded --version
 
       - run: npm install
       - run: npm run build

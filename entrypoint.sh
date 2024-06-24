@@ -3,7 +3,7 @@
 set -eax
 
 echo "##[cmd] entrypoint.sh $*"
-export HUGO_VERSION="${HUGO_VERSION:-0.122.0}"
+export HUGO_VERSION="${HUGO_VERSION:-0.127.0}"
 export INPUT_ACTION="${INPUT_ACTION:-${1:-build}}"
 
 if [[ "${INPUT_ACTION:-}" = "${1:-}" ]]; then
