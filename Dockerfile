@@ -32,8 +32,11 @@ RUN set -o pipefail && (curl -fsSL "https://fnm.vercel.app/install" | \
 RUN fnm install --lts
 
 # install brew
-RUN bash --login -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)" \
-    && (echo 'export PATH="$PATH:/home/linuxbrew/.linuxbrew/bin:/home/linuxbrew/.linuxbrew/sbin"' >> "${HOME}/.bash_profile")
+RUN curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh >"${HOME}/install-brew.sh" \
+    && chmod +x "${HOME}/install-brew.sh"
+
+RUN "${HOME}/install-brew.sh" \
+    && echo 'export PATH="$PATH:/home/linuxbrew/.linuxbrew/bin:/home/linuxbrew/.linuxbrew/sbin"' >> "${HOME}/.bash_profile"
 
 # install Hugo
 RUN brew install hugo \
