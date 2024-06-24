@@ -102,6 +102,8 @@ runs:
     #   --apiToken "<token>"
     - name: Run
       uses: addnab/docker-run-action@v3
+      env:
+        SKIP_DEPLOY_ON_MISSING_SECRETS: "${{ inputs.skip_deploy_on_missing_secrets }}"
       with:
         image: gha-static-web-apps-deploy:latest
         run: >-
@@ -109,5 +111,3 @@ runs:
           --skipAppBuild ${{ inputs.skip_app_build }}
           --app ${{ inputs.data_api_location }}
           --apiToken ${{ inputs.azure_static_web_apps_api_token }}
-        env:
-          SKIP_DEPLOY_ON_MISSING_SECRETS: ${{ inputs.skip_deploy_on_missing_secrets }}
