@@ -1,5 +1,6 @@
 # yaml-language-server: $schema=https://json.schemastore.org/taskfile.json
 # https://taskfile.dev
+# brew install go-task
 
 version: "3"
 
@@ -10,17 +11,37 @@ vars:
   DOCKER_IMAGE_NAME: "static-web-apps-deploy"
   DOCKER_IMAGE_TAG: "{{ .DOCKER_IMAGE_NAME }}:stable"
   BUILD_DIR: "{{ .TASKFILE_DIR }}/.build"
+  BIN_DIR: "{{ .BUILD_DIR }}/bin"
+
+  BREW: "/home/linuxbrew/.linuxbrew/bin/brew"
 
 tasks:
   default:
     cmds:
       - task: run
 
+  install-brew:
+    status:
+      - test -f "{{ .BREW }}"
+    cmds:
+      - cmd: |
+          /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+          if [ -n "$GITHUB_PATH" ]; then
+            echo "/home/linuxbrew/.linuxbrew/bin" >> $GITHUB_PATH
+            echo "/home/linuxbrew/.linuxbrew/sbin" >> $GITHUB_PATH
+          fi
+        platforms: [darwin, linux]
+      - cmd: scoop install brew
+        platforms: [windows]
+
   install-sass:
+    deps: [install-brew]
     status:
       - sass --embedded --version
+    env:
+      PATH: "${PATH}:/home/linuxbrew/.linuxbrew/bin:/home/linuxbrew/.linuxbrew/sbin"
     cmds:
-      - cmd: 'brew install sass/sass/sass'
+      - cmd: '"{{ .BREW }}" install sass/sass/sass'
         platforms: [darwin, linux]
       - cmd: 'scoop install sass'
         platforms: [windows]
@@ -76,6 +97,29 @@ tasks:
           --progress plain
           "{{ fromSlash .TASKFILE_DIR }}"
           >"{{ fromSlash .DOCKER_BUILD_LOG_PATH }}"
+
+  static-sites-client:
+    vars:
+      linux_url: "https://swalocaldeploy.azureedge.net/downloads/1.0.020981/linux/StaticSitesClient"
+      linux_sha: "e55db21d0720a12098804559152303e66846bdd94c13a30b30be29a0fc9ae366"
+
+      win_url: "https://swalocaldeploy.azureedge.net/downloads/1.0.020981/windows/StaticSitesClient.exe"
+      win_sha: "4e4eb72aef26641e236c24929c822500e956bda099ca78054112cadf20261107"
+
+      osx_url: "https://swalocaldeploy.azureedge.net/downloads/1.0.020981/macOS/StaticSitesClient"
+      osx_sha: "e0f2ae7ec297510a1b3b9332c0dc0dd962a51adb8ea13cd4f3746d79fc24a7e9"
+    cmds:
+      - cmd: 'mkdir -p "{{ .BIN_DIR }}"'
+      - cmd: 'curl -L -o "{{ .BIN_DIR }}/StaticSitesClient" "{{ .linux_url }}"'
+      - cmd: 'chmod +x "{{ .BIN_DIR }}/StaticSitesClient"'
+      # - cmd: |
+      #     calculated_hash=$(sha256sum "{{ .BIN_DIR }}/StaticSitesClient" | awk '{ print $1 }')
+      #     echo "Calculated hash: $calculated_hash"
+      #     if [ "$calculated_hash" = "{{ .linux_sha }}" ]; then
+      #       echo "Hash match. The file is verified."
+      #     else
+      #       exit 88
+      #     fi
 
   run:
     deps: [container]
@@ -149,22 +193,4 @@ tasks:
           --skipAppBuild {{ .SKIP_APP_BUILD }}
           --app "{{ .DOCKER_APP_LOCATION }}"
           --apiToken "{{ .AZURE_STATIC_WEB_APPS_API_TOKEN }}"
-
-  get-binaries:
-    vars:
-      linux_url: "https://swalocaldeploy.azureedge.net/downloads/1.0.020981/linux/StaticSitesClient"
-      linux_sha: "e55db21d0720a12098804559152303e66846bdd94c13a30b30be29a0fc9ae366"
-
-      win_url: "https://swalocaldeploy.azureedge.net/downloads/1.0.020981/windows/StaticSitesClient.exe"
-      win_sha: "4e4eb72aef26641e236c24929c822500e956bda099ca78054112cadf20261107"
-
-      osx_url: "https://swalocaldeploy.azureedge.net/downloads/1.0.020981/macOS/StaticSitesClient"
-      osx_sha: "e0f2ae7ec297510a1b3b9332c0dc0dd962a51adb8ea13cd4f3746d79fc24a7e9"
-    cmds:
-      - cmd: 'mkdir -p .bin'
-      - cmd: 'curl -L -o ./.bin/StaticSitesClient {{ .linux_url }}'
-      - cmd: 'chmod +x ./.bin/StaticSitesClient'
-
-
-
 

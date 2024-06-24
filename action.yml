@@ -81,13 +81,15 @@ runs:
         DOCKER_BUILDKIT: "1"
       with:
         buildkitd-flags: --debug
+        cleanup: false
+        cache-binary: true
 
     - name: Build
-      uses: docker/build-push-action@v5
+      uses: docker/build-push-action@v6
       with:
         context: .
         file: Dockerfile
-        tags: gha-static-web-apps-deploy:latest
+        tags: static-web-apps-deploy:latest
         load: true
         cache-from: type=gha
         cache-to: type=gha,mode=max
@@ -105,7 +107,7 @@ runs:
       env:
         SKIP_DEPLOY_ON_MISSING_SECRETS: "${{ inputs.skip_deploy_on_missing_secrets }}"
       with:
-        image: gha-static-web-apps-deploy:latest
+        image: static-web-apps-deploy:latest
         run: >-
           ${{ inputs.action }}
           --skipAppBuild ${{ inputs.skip_app_build }}

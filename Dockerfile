@@ -33,9 +33,7 @@ RUN fnm install --lts
 
 # install brew
 RUN bash --login -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)" \
-    && (echo 'export PATH="$PATH:/home/linuxbrew/.linuxbrew/bin:/home/linuxbrew/.linuxbrew/sbin"' >> "${HOME}/.bash_profile") \
-    && eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)" \
-    && brew cleanup --prune=all
+    && (echo 'export PATH="$PATH:/home/linuxbrew/.linuxbrew/bin:/home/linuxbrew/.linuxbrew/sbin"' >> "${HOME}/.bash_profile")
 
 # install Hugo
 RUN brew install hugo \
