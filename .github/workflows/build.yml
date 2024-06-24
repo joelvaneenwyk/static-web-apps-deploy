@@ -1,4 +1,4 @@
-name: Validate Github Action
+name: Validate GitHub Action
 
 on:
   push:
@@ -12,8 +12,12 @@ env:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
 
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
