@@ -23,8 +23,8 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 # install fnm (Fast Node Manager)
-RUN set -o pipefail && curl -fsSL https://fnm.vercel.app/install | \
-        bash --login -s -- --install-dir "${FNM_DIR}" --skip-shell \
+RUN set -o pipefail && (curl -fsSL "https://fnm.vercel.app/install" | \
+        bash --login -s -- --install-dir "${FNM_DIR}" --skip-shell) \
     && ( \
         "${FNM_EXE}" env --shell bash \
         && echo 'export PATH="$PATH":~/.fnm:~/.local/share/fnm' \
@@ -35,7 +35,8 @@ RUN fnm install --lts
 
 # install brew
 RUN bash --login -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)" \
-    && echo "export PATH=$PATH:/home/linuxbrew/.linuxbrew/bin:/home/linuxbrew/.linuxbrew/sbin" >> "${HOME}/.bash_profile"
+    && (echo; echo 'export PATH="$PATH:/home/linuxbrew/.linuxbrew/bin:/home/linuxbrew/.linuxbrew/sbin"' >> "${HOME}/.bash_profile") \
+    && /home/linuxbrew/.linuxbrew/bin/brew cleanup --prune=all
 
 # install Hugo
 RUN brew install hugo \

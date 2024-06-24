@@ -1,4 +1,4 @@
-# lsp
+# yaml-language-server: $schema=https://json.schemastore.org/taskfile.json
 # https://taskfile.dev
 
 version: "3"
@@ -7,23 +7,86 @@ dotenv:
   - .env
 
 vars:
-  DOCKER_IMAGE_NAME: static-web-apps-deploy
+  DOCKER_IMAGE_NAME: "static-web-apps-deploy"
+  DOCKER_IMAGE_TAG: "{{ .DOCKER_IMAGE_NAME }}:stable"
+  BUILD_DIR: "{{ .TASKFILE_DIR }}/.build"
 
 tasks:
   default:
     cmds:
       - task: run
 
-  init:
+  install-sass:
+    status:
+      - sass --embedded --version
+    cmds:
+      - cmd: 'brew install sass/sass/sass'
+        platforms: [darwin, linux]
+      - cmd: 'scoop install sass'
+        platforms: [windows]
+
+  init-build:
+    status:
+      - test -d .build
+    cmds:
+      - cmd: cmd /d /c mkdir "{{ .BUILD_DIR }}"
+        platforms: [windows]
+      - cmd: mkdir -p "{{ .BUILD_DIR }}"
+        platforms: [linux, darwin]
+
+  install-node-packages:
+    sources:
+      - "{{ .TASKFILE_DIR }}/package.json"
+    generates:
+      - "{{ .TASKFILE_DIR }}/node_modules/.bin/autoprefixer"
+      - "{{ .TASKFILE_DIR }}/node_modules/.bin/prettier"
+      - "{{ .TASKFILE_DIR }}/node_modules/.bin/postcss"
     cmds:
       - cmd: npm install
+
+  init:
+    deps: [build]
+
+  build:
+    deps: [install-sass, install-node-packages, init-build]
+    sources:
+      - "{{ .TASKFILE_DIR }}/package.json"
+      - "{{ .TASKFILE_DIR }}/test/hugo.toml"
+      - "{{ .TASKFILE_DIR }}/test/themes/nightfall/theme.toml"
+    generates:
+      - "{{ .TASKFILE_DIR }}/test/public/index.html"
+      - "{{ .TASKFILE_DIR }}/test/public/404.html"
+    cmds:
       - cmd: npm run build
+
+  container:
+    deps: [init]
+    vars:
+      DOCKERFILE_PATH: "{{ .TASKFILE_DIR }}/Dockerfile"
+      DOCKER_BUILD_LOG_PATH: "{{ .BUILD_DIR }}/docker-build.log"
+    sources:
+      - "{{ .DOCKERFILE_PATH }}"
+    generates:
+      - "{{ .DOCKER_BUILD_LOG_PATH }}"
+    cmds:
+      - cmd: >-
+          docker build
+          --file "{{ fromSlash .DOCKERFILE_PATH }}"
+          -t "static-web-apps-deploy:stable"
+          --progress plain
+          "{{ fromSlash .TASKFILE_DIR }}"
+          >"{{ fromSlash .DOCKER_BUILD_LOG_PATH }}"
+
+  run:
+    deps: [container]
+    cmds:
+      - cmd: 'docker run --rm -it "static-web-apps-deploy:stable" {{ .CLI_ARGS }}'
 
   docker-build:
     internal: true
     cmds:
       - cmd: >-
-          docker build --progress=plain -t static-web-apps-deploy .
+          docker build --progress=plain -t "{{ .DOCKER_IMAGE_TAG }}" .
 
   docker-run:
     internal: true
@@ -47,7 +110,7 @@ tasks:
           "static-web-apps-deploy"
           {{.ARGS}}
 
-  run:
+  run-default:
     deps: [init]
     vars:
       outputLocation: '{{ default "./test/public" .OUTPUT_LOCATION }}'
