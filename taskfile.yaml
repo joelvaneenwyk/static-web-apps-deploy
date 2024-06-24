@@ -2,18 +2,18 @@
 # https://taskfile.dev
 # brew install go-task
 
-version: "3"
+version: '3'
 
 dotenv:
   - .env
 
 vars:
-  DOCKER_IMAGE_NAME: "static-web-apps-deploy"
-  DOCKER_IMAGE_TAG: "{{ .DOCKER_IMAGE_NAME }}:stable"
-  BUILD_DIR: "{{ .TASKFILE_DIR }}/.build"
-  BIN_DIR: "{{ .BUILD_DIR }}/bin"
+  DOCKER_IMAGE_NAME: 'static-web-apps-deploy'
+  DOCKER_IMAGE_TAG: '{{ .DOCKER_IMAGE_NAME }}:stable'
+  BUILD_DIR: '{{ .TASKFILE_DIR }}/.build'
+  BIN_DIR: '{{ .BUILD_DIR }}/bin'
 
-  BREW: "/home/linuxbrew/.linuxbrew/bin/brew"
+  BREW: '/home/linuxbrew/.linuxbrew/bin/brew'
 
 tasks:
   default:
@@ -40,11 +40,11 @@ tasks:
     status:
       - sass --embedded --version
     env:
-      PATH: "${PATH}:/home/linuxbrew/.linuxbrew/bin:/home/linuxbrew/.linuxbrew/sbin"
+      PATH: '${PATH}:/home/linuxbrew/.linuxbrew/bin:/home/linuxbrew/.linuxbrew/sbin'
     cmds:
       - cmd: '"{{ .BREW }}" install sass/sass/sass'
         platforms: [darwin, linux]
-      - cmd: "scoop install sass"
+      - cmd: 'scoop install sass'
         platforms: [windows]
 
   init-build:
@@ -58,11 +58,11 @@ tasks:
 
   install-node-packages:
     sources:
-      - "{{ .TASKFILE_DIR }}/package.json"
+      - '{{ .TASKFILE_DIR }}/package.json'
     generates:
-      - "{{ .TASKFILE_DIR }}/node_modules/.bin/autoprefixer"
-      - "{{ .TASKFILE_DIR }}/node_modules/.bin/prettier"
-      - "{{ .TASKFILE_DIR }}/node_modules/.bin/postcss"
+      - '{{ .TASKFILE_DIR }}/node_modules/.bin/autoprefixer'
+      - '{{ .TASKFILE_DIR }}/node_modules/.bin/prettier'
+      - '{{ .TASKFILE_DIR }}/node_modules/.bin/postcss'
     cmds:
       - cmd: npm install
 
@@ -72,24 +72,24 @@ tasks:
   build:
     deps: [install-sass, install-node-packages, init-build]
     sources:
-      - "{{ .TASKFILE_DIR }}/package.json"
-      - "{{ .TASKFILE_DIR }}/test/hugo.toml"
-      - "{{ .TASKFILE_DIR }}/test/themes/nightfall/theme.toml"
+      - '{{ .TASKFILE_DIR }}/package.json'
+      - '{{ .TASKFILE_DIR }}/test/hugo.toml'
+      - '{{ .TASKFILE_DIR }}/test/themes/nightfall/theme.toml'
     generates:
-      - "{{ .TASKFILE_DIR }}/test/public/index.html"
-      - "{{ .TASKFILE_DIR }}/test/public/404.html"
+      - '{{ .TASKFILE_DIR }}/test/public/index.html'
+      - '{{ .TASKFILE_DIR }}/test/public/404.html'
     cmds:
       - cmd: npm run build
 
   container:
     deps: [init]
     vars:
-      DOCKERFILE_PATH: "{{ .TASKFILE_DIR }}/Dockerfile"
-      DOCKER_BUILD_LOG_PATH: "{{ .BUILD_DIR }}/docker-build.log"
+      DOCKERFILE_PATH: '{{ .TASKFILE_DIR }}/Dockerfile'
+      DOCKER_BUILD_LOG_PATH: '{{ .BUILD_DIR }}/docker-build.log'
     sources:
-      - "{{ .DOCKERFILE_PATH }}"
+      - '{{ .DOCKERFILE_PATH }}'
     generates:
-      - "{{ .DOCKER_BUILD_LOG_PATH }}"
+      - '{{ .DOCKER_BUILD_LOG_PATH }}'
     cmds:
       - cmd: >-
           docker build
@@ -101,14 +101,14 @@ tasks:
 
   static-sites-client:
     vars:
-      linux_url: "https://swalocaldeploy.azureedge.net/downloads/1.0.020981/linux/StaticSitesClient"
-      linux_sha: "e55db21d0720a12098804559152303e66846bdd94c13a30b30be29a0fc9ae366"
+      linux_url: 'https://swalocaldeploy.azureedge.net/downloads/1.0.020981/linux/StaticSitesClient'
+      linux_sha: 'e55db21d0720a12098804559152303e66846bdd94c13a30b30be29a0fc9ae366'
 
-      win_url: "https://swalocaldeploy.azureedge.net/downloads/1.0.020981/windows/StaticSitesClient.exe"
-      win_sha: "4e4eb72aef26641e236c24929c822500e956bda099ca78054112cadf20261107"
+      win_url: 'https://swalocaldeploy.azureedge.net/downloads/1.0.020981/windows/StaticSitesClient.exe'
+      win_sha: '4e4eb72aef26641e236c24929c822500e956bda099ca78054112cadf20261107'
 
-      osx_url: "https://swalocaldeploy.azureedge.net/downloads/1.0.020981/macOS/StaticSitesClient"
-      osx_sha: "e0f2ae7ec297510a1b3b9332c0dc0dd962a51adb8ea13cd4f3746d79fc24a7e9"
+      osx_url: 'https://swalocaldeploy.azureedge.net/downloads/1.0.020981/macOS/StaticSitesClient'
+      osx_sha: 'e0f2ae7ec297510a1b3b9332c0dc0dd962a51adb8ea13cd4f3746d79fc24a7e9'
     cmds:
       - cmd: 'mkdir -p "{{ .BIN_DIR }}"'
       - cmd: 'curl -L -o "{{ .BIN_DIR }}/StaticSitesClient" "{{ .linux_url }}"'
@@ -159,8 +159,8 @@ tasks:
     deps: [init]
     vars:
       outputLocation: '{{ default "./test/public" .OUTPUT_LOCATION }}'
-      skipApiBuild: "{{ default false .SKIP_API_BUILD }}"
-      skipDeployOnMissingSecrets: "{{ default false .SKIP_DEPLOY_ON_MISSING_SECRETS }}"
+      skipApiBuild: '{{ default false .SKIP_API_BUILD }}'
+      skipDeployOnMissingSecrets: '{{ default false .SKIP_DEPLOY_ON_MISSING_SECRETS }}'
     cmds:
       - task: docker-run
         vars:
@@ -177,14 +177,14 @@ tasks:
     vars:
       SKIP_DEPLOY_ON_MISSING_SECRETS: true
       SKIP_APP_BUILD: true
-      APP_LOCATION: "{{ .TASKFILE_DIR }}/test/public"
-      DOCKER_APP_LOCATION: "/root/build"
+      APP_LOCATION: '{{ .TASKFILE_DIR }}/test/public'
+      DOCKER_APP_LOCATION: '/root/build'
     # https://github.com/Azure/static-web-apps/issues/679#issuecomment-1357799789
     # skip_deploy_on_missing_secrets: true
     # ABOVE: this one is documented in few places, but it's expected to be a ENV var!
     # see https://github.com/Azure/static-web-apps/issues/679
     env:
-      SKIP_DEPLOY_ON_MISSING_SECRETS: "{{ .SKIP_DEPLOY_ON_MISSING_SECRETS }}"
+      SKIP_DEPLOY_ON_MISSING_SECRETS: '{{ .SKIP_DEPLOY_ON_MISSING_SECRETS }}'
     cmds:
       - cmd: >-
           docker run --entrypoint "/bin/staticsites/StaticSitesClient"
