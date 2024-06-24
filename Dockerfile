@@ -21,6 +21,14 @@ RUN apt-get update \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
+# install brew
+ENV HOMEBREW_ROOT="${HOME}/homebrew"
+ENV BREW_EXE="${HOMEBREW_ROOT}/bin/brew"
+RUN git clone https://github.com/Homebrew/brew "${HOME}/homebrew" \
+        && eval "$("${BREW_EXE}" shellenv)" \
+        && brew update --force --quiet \
+        && chmod -R go-w "$(brew --prefix)/share/zsh"
+
 # install fnm (Fast Node Manager)
 RUN set -o pipefail && (curl -fsSL "https://fnm.vercel.app/install" | \
         bash --login -s -- --install-dir "${FNM_DIR}" --skip-shell) \
@@ -31,12 +39,6 @@ RUN set -o pipefail && (curl -fsSL "https://fnm.vercel.app/install" | \
 
 # download and install Node.js
 RUN fnm install --lts
-
-# install brew
-ENV PATH="${PATH}:/home/linuxbrew/.linuxbrew/bin:/home/linuxbrew/.linuxbrew/sbin"
-RUN (curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh >"${HOME}/install-brew.sh") \
-    && chmod a+x "${HOME}/install-brew.sh" \
-    && "${HOME}/install-brew.sh"
 
 # install Hugo
 RUN brew install hugo \
