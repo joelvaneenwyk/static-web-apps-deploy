@@ -6,6 +6,8 @@
 .fnm/
 .bin/
 .idea/
+test/themes/nightfall/exampleSite/
+test/themes/nightfall/netlify.toml
 
 static-web-apps-deploy*.tgz
 

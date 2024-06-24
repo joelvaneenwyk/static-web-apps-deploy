@@ -25,7 +25,13 @@ RUN apt-get update \
 # install fnm (Fast Node Manager)
 RUN set -o pipefail && curl -fsSL https://fnm.vercel.app/install | \
         bash --login -s -- --install-dir "${FNM_DIR}" --skip-shell \
-    && echo 'eval "$("${FNM_EXE}" env --use-on-cd --shell bash)"' >> "${HOME}/.bash_profile"
+    && ( \
+        "${FNM_EXE}" env --shell bash \
+        && echo 'export PATH="$PATH":~/.fnm:~/.local/share/fnm' \
+    ) >> "${HOME}/.bash_profile"
+
+# download and install Node.js
+RUN fnm install --lts
 
 # install brew
 RUN bash --login -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)" \
@@ -40,9 +46,6 @@ RUN brew install hugo \
 RUN brew install sass/sass/sass \
     && sass --embedded --version \
     && brew cleanup --prune=all
-
-# download and install Node.js
-RUN fnm install --lts
 
 ENTRYPOINT ["/entrypoint.sh"]
 SHELL [ "sh" ]

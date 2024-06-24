@@ -13,7 +13,6 @@ Nightfall is a minimal dark theme for Hugo. [Demo](https://hugo-theme-nightfall.
 Install [Hugo](https://gohugo.io/installation/) and **[dart-sass](https://gohugo.io/functions/resources/tocss/#dart-sass)**.
 
 Import as [hugo module](https://gohugo.io/hugo-modules/use-modules/#use-a-module-for-a-theme) in `config.toml`:
-
 ```toml
 [module]
 [[module.imports]]
@@ -23,7 +22,6 @@ Import as [hugo module](https://gohugo.io/hugo-modules/use-modules/#use-a-module
 OR
 
 Import manually:
-
 1. `git clone https://github.com/LordMathis/hugo-theme-nightfall themes/nightfall`
 2. Add `theme = "nightfall"` in your `config.toml`:
 
@@ -42,7 +40,6 @@ hostname = "gohugo.io"
     name = "Mr Hugo"
     email = "hugo@example.com"
 ```
-
 ### Social links
 
 You can also add social links. To use icons for social links, you also need to add the link to icon font to custom-head.html
@@ -53,6 +50,8 @@ key = 0
 name = "github"
 url = "https://github.com/gohugoio"
 icon = "fa-brands fa-github"  # Add link to your icon font to `layouts/partials/custom-head.html`
+target = "_blank" # Defines your target option in a-href. _blank for a new Tab for example.
+aria = "GitHub Profile" # Define the aria label for accessibility like page reader - this is better for your SEO
 
 [[params.social]]
 key = 1
@@ -97,15 +96,13 @@ You can also disable metadata on a specific page by adding `showMetadata = false
 ### Description
 
 To add a site wide description, add `sitedescription` to `config.toml`. For example:
-
 ```toml
 [params]
 sitedescription = 'Your website description'
 ```
 
 You can also add a description to individual posts in you website by adding `description` to the front matter. For example:
-
-```toml
+```
 +++
 title =  'This is the post title'
 draft = false
@@ -113,7 +110,6 @@ date = 2024-01-23
 description = 'This is the description'
 +++
 ```
-
 ### Menu
 
 To add a menu item add `[[menu.header]]` item to `config.toml`. For example:
