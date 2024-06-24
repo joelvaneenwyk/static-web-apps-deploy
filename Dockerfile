@@ -25,18 +25,18 @@ RUN apt-get update \
 RUN set -o pipefail && (curl -fsSL "https://fnm.vercel.app/install" | \
         bash --login -s -- --install-dir "${FNM_DIR}" --skip-shell) \
     && ( \
-        "${FNM_EXE}" env --shell bash \
-        && echo 'export PATH="$PATH":~/.fnm:~/.local/share/fnm' ) >> "~/.bash_profile"
+                "${FNM_EXE}" env --shell bash \
+                && echo 'export PATH="$PATH":~/.fnm:~/.local/share/fnm' \
+        ) >> "${HOME}/.bash_profile"
 
 # download and install Node.js
 RUN fnm install --lts
 
 # install brew
-RUN curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh >"~/install-brew.sh" \
-    && chmod a+x "${HOME}/install-brew.sh"
-
-RUN "${HOME}/install-brew.sh" \
-    && echo 'export PATH="$PATH":/home/linuxbrew/.linuxbrew/bin:/home/linuxbrew/.linuxbrew/sbin' >> "~/.bash_profile"
+ENV PATH="${PATH}:/home/linuxbrew/.linuxbrew/bin:/home/linuxbrew/.linuxbrew/sbin"
+RUN (curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh >"${HOME}/install-brew.sh") \
+    && chmod a+x "${HOME}/install-brew.sh" \
+    && "${HOME}/install-brew.sh"
 
 # install Hugo
 RUN brew install hugo \
