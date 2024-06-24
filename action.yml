@@ -1,3 +1,5 @@
+# yaml-language-server: $schema=https://json.schemastore.org/github-action
+
 name: "Azure Static Web Apps Deploy"
 description: "Deploys an application to Azure Static Web Apps"
 
@@ -9,20 +11,27 @@ inputs:
   action:
     description: "Action to perform"
     required: true
+    default: 'deploy'
   app_location:
     description: "Directory location of the application source code"
     required: true
+    default: './'
   azure_static_web_apps_api_token:
     description: "Required token"
     required: true
   skip_deploy_on_missing_secrets:
     description: "Skip deployment if secrets are missing"
     required: false
+    default: 'true'
   api_build_command:
     description: "Custom command for Oryx to run when building Azure Functions source code"
     required: false
   api_location:
     description: "Directory location of the Azure Functions source code"
+    required: false
+    default: ''
+  data_api_location:
+    description: "Directory location of the Data API configuration files"
     required: false
   app_artifact_location:
     description: "Identical in use to output_location"
@@ -57,9 +66,6 @@ inputs:
   is_static_export:
     description: "Indicates you are using `next export` to generate a static site if set to true."
     required: false
-  data_api_location:
-    description: "Directory location of the Data API configuration files"
-    required: false
 
 outputs:
   static_web_app_url:
@@ -75,11 +81,34 @@ runs:
         DOCKER_BUILDKIT: "1"
       with:
         buildkitd-flags: --debug
+        cleanup: false
 
     - name: Build
-      uses: docker/build-push-action@v5
+      uses: docker/build-push-action@v6
       with:
         context: .
-        # args:
-        #   - ${{ inputs.action }}
-        #   - ${{ inputs.data_api_location }}
+        file: Dockerfile
+        tags: static-web-apps-deploy:latest
+        load: true
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+        push: false
+
+    # docker run --entrypoint "/bin/staticsites/StaticSitesClient" \
+    #   --volume "$(pwd)"/build:/root/build \
+    #   mcr.microsoft.com/appsvc/staticappsclient:stable \
+    #   upload \
+    #   --skipAppBuild true \
+    #   --app /root/build \
+    #   --apiToken "<token>"
+    - name: Run
+      uses: addnab/docker-run-action@v3
+      env:
+        SKIP_DEPLOY_ON_MISSING_SECRETS: "${{ inputs.skip_deploy_on_missing_secrets }}"
+      with:
+        image: static-web-apps-deploy:latest
+        run: >-
+          ${{ inputs.action }}
+          --skipAppBuild ${{ inputs.skip_app_build }}
+          --app ${{ inputs.data_api_location }}
+          --apiToken ${{ inputs.azure_static_web_apps_api_token }}

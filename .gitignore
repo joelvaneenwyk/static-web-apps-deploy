@@ -3,14 +3,28 @@
 ##
 ## Get latest from https://github.com/github/gitignore/blob/master/VisualStudio.gitignore
 
+.fnm/
+.bin/
+.idea/
+.build/
+.task/
+
+test/themes/nightfall/exampleSite/
+test/themes/nightfall/public/
+test/themes/nightfall/resources/_gen/
+test/themes/nightfall/netlify.toml
+
+static-web-apps-deploy*.tgz
+
+sass_embedded/
+sass_embedded-*.tar.gz
+
 test/public/
 test/resources/
 test/.hugo_build.lock
 
 dart-sass/
 dart-sass-*.tar.gz
-
-package-lock.json
 
 # User-specific files
 *.rsuser

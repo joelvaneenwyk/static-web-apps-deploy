@@ -1,13 +1,16 @@
-# Custom Dictionary Words
+#
+# static-web-apps-deploy - CSpell Dictionary
 ackages
 appxbundle
 appxupload
 binlog
 buildhelp
 BUILDKIT
+buildkitd
 buildx
 cachefile
 checkin
+cmds
 codegen
 coveragexml
 csdef
@@ -34,6 +37,8 @@ ipdb
 jmconfig
 localhistory
 mfractor
+msrc
+MSRC
 Nsight
 ntvs
 nunit
