@@ -17,7 +17,7 @@ ENV NONINTERACTIVE=1
 
 RUN apt-get update \
     && apt-get install --yes --no-install-recommends \
-        bash build-essential procps curl file git sudo \
+        bash build-essential procps curl file git \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
@@ -33,7 +33,7 @@ RUN fnm install --lts
 
 # install brew
 RUN curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh >"${HOME}/install-brew.sh" \
-    && chmod +x "${HOME}/install-brew.sh"
+    && chmod a+x "${HOME}/install-brew.sh"
 
 RUN "${HOME}/install-brew.sh" \
     && echo 'export PATH="$PATH:/home/linuxbrew/.linuxbrew/bin:/home/linuxbrew/.linuxbrew/sbin"' >> "${HOME}/.bash_profile"
