@@ -140,7 +140,7 @@ tasks:
   run:
     deps: [container]
     vars:
-      ARGS: '{{ default "" .ARGS .CLI_ARGS }}'
+      ARGS: '{{ default .CLI_ARGS .ARGS }}'
     cmds:
       - cmd: >-
           docker run
@@ -157,8 +157,13 @@ tasks:
           "{{ .DOCKER_IMAGE_TAG }}"
           {{ .ARGS }}
 
-  run-interactive:
-    aliases: [dci]
+  version:
+    cmds:
+      - task: run
+        vars: { ARGS: 'version' }
+
+  bash:
+    aliases: [sh]
     interactive: true
     cmds:
       - task: run
