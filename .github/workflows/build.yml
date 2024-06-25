@@ -25,20 +25,16 @@ jobs:
 
     name: Build Docker Image
     steps:
-      - uses: actions/checkout@v4
-        with:
-          submodules: recursive
-          fetch-depth: 0
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
       - name: Login Container Registry
         uses: docker/login-action@v3
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+          logout: false
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
       - name: Extract Image Metadata
         id: meta
@@ -46,6 +42,7 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
 
+      - uses: actions/checkout@v4
       - name: Build and Push Image
         id: push
         uses: docker/build-push-action@v6
@@ -59,11 +56,11 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      - id: get-build-name
-        name: Get Image Name
+      - name: Get Image Name
+        id: get-build-name
         run: |
           imageName=${{ fromJSON(steps.push.outputs.metadata)['image.name'] }}
-          echo "::set-output name=image_name::$imageName"
+          echo "image_name=${imageName:-joelvaneenwyk/static-web-apps-deploy}" >> $GITHUB_OUTPUT
 
   # Inspired by the following example:
   #
@@ -80,14 +77,30 @@ jobs:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+          logout: false
 
       - name: Test 'version' Command
         run: |
           echo "Checking image..."
-          docker run --rm ${{needs.build-and-push-image.outputs.image_name}} version
+          docker run --rm "${{needs.build-and-push-image.outputs.image_name}}" version
+
+  test-local-github-action:
+    needs: validate-docker-image
+    runs-on: ubuntu-latest
+    name: Test GitHub Action
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./
+        name: Test
+        with:
+          action: run
+          app_location: ./test
+          output_location: ./test/public
+          repo_token: ${{ github.token }}
+          skip_deploy_on_missing_secrets: true
 
   build:
-    needs: validate-docker-image
+    needs: test-local-github-action
     strategy:
       fail-fast: false
       matrix:
@@ -125,22 +138,3 @@ jobs:
 
       - run: npm install
       - run: npm run build
-
-  test:
-    needs: build
-    runs-on: ubuntu-latest
-    name: Test GitHub Action
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          submodules: recursive
-          fetch-depth: 0
-
-      - uses: ./
-        name: Test
-        with:
-          action: build
-          app_location: ./test
-          output_location: ./test/public
-          repo_token: ${{ github.token }}
-          skip_deploy_on_missing_secrets: true
