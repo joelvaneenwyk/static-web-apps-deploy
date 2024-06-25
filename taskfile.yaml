@@ -113,6 +113,16 @@ tasks:
     cmds:
       - cmd: npm run build
 
+  format:
+    deps: [build]
+    cmds:
+      - cmd: npm run format
+
+  pre-commit:
+    deps: [format]
+    cmds:
+      - cmd: git add .
+
   container:
     deps: [init]
     aliases:
@@ -137,10 +147,11 @@ tasks:
           "{{ fromSlash .TASKFILE_DIR }}"
           >"{{ fromSlash .DOCKER_BUILD_LOG_PATH }}"
 
-  run:
+  docker-run:
     deps: [container]
+    aliases: [r, run]
     vars:
-      ARGS: '{{ default .CLI_ARGS .ARGS }}'
+      ARGS: '{{ coalesce .ARGS .CLI_ARGS "" }}'
     cmds:
       - cmd: >-
           docker run
@@ -157,16 +168,78 @@ tasks:
           "{{ .DOCKER_IMAGE_TAG }}"
           {{ .ARGS }}
 
+  install-act:
+    status:
+      - act --version
+    cmds:
+      - cmd: 'brew install nektos/tap/act'
+        platforms: [linux, darwin]
+      - cmd: 'scoop install main/act'
+        platforms: [windows]
+
+  install-gh:
+    status:
+      - gh --version
+    cmds:
+      - cmd: 'brew install gh'
+        platforms: [linux, darwin]
+      - cmd: 'winget install --id GitHub.cli -scope machine'
+        platforms: [windows]
+
+  install-gh-act:
+    deps: [install-gh, install-act]
+    status:
+      - gh act --version
+    cmds:
+      - cmd: gh extension install nektos/gh-act
+
+  act:
+    deps: [install-gh-act]
+    env:
+      GIT_TERMINAL_PROMPT: 0
+    vars:
+      ACT_GH_JOB_NAME: build-and-push-image
+      ACT_GH_TOKEN: '{{ default "INVALID_TOKEN" .GITHUB_TOKEN }}'
+      ACT_GH_USER: '{{ default "INVALID_USER" .GITHUB_USER }}'
+    cmds:
+      - cmd: |
+          echo "{{ .ACT_GH_TOKEN }}" | \
+            docker login ghcr.io -u "{{ .ACT_GH_USER }}" --password-stdin
+      - cmd: >-
+          gh act
+          -j="{{.ACT_GH_JOB_NAME}}"
+          -s GITHUB_TOKEN="{{ .ACT_GH_TOKEN }}"
+          --replace-ghe-action-token-with-github-com "{{ .ACT_GH_TOKEN }}"
+
   version:
     cmds:
-      - task: run
+      - task: docker-run
         vars: { ARGS: 'version' }
+
+  dotenv-login:
+    status:
+      - 'test -f "{{ .TASKFILE_DIR }}/.env.me"'
+    sources:
+      - .env.vault
+    generates:
+      - .env.me
+    cmds:
+      - cmd: npx --yes dotenv-vault@latest login --yes
+
+  dotenv-push:
+    deps: [dotenv-login]
+    preconditions:
+      - 'test -f "{{ .TASKFILE_DIR }}/.env"'
+      - 'test -f "{{ .TASKFILE_DIR }}/.env.me"'
+      - 'test -f "{{ .TASKFILE_DIR }}/.env.vault"'
+    cmds:
+      - cmd: npx --yes dotenv-vault@latest push --yes
 
   bash:
     aliases: [sh]
     interactive: true
     cmds:
-      - task: run
+      - task: docker-run
         vars: { ARGS: 'bash --login {{ .CLI_ARGS }}' }
 
   run-default:
@@ -177,7 +250,7 @@ tasks:
       skipApiBuild: '{{ default false .SKIP_API_BUILD }}'
       skipDeployOnMissingSecrets: '{{ default false .SKIP_DEPLOY_ON_MISSING_SECRETS }}'
     cmds:
-      - task: run
+      - task: docker-run
         vars:
           ARGS: >-
             --verbose
