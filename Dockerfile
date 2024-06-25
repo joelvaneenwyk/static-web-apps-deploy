@@ -17,7 +17,7 @@ ENV NONINTERACTIVE=1
 
 RUN apt-get update \
         && apt-get install --yes --no-install-recommends \
-        bash build-essential procps curl file git \
+        bash build-essential procps curl file git sudo \
         && apt-get clean \
         && rm -rf /var/lib/apt/lists/*
 
@@ -31,7 +31,7 @@ RUN rm -rf /home/linuxbrew/.linuxbrew/Homebrew \
 RUN touch "$HOME/.bash_profile" \
         && (echo "$(/home/linuxbrew/.linuxbrew/Homebrew/bin/brew shellenv --use-on-cd)" >>"$HOME/.bash_profile")
 
-RUN brew update --force
+RUN brew update --debug --force
 RUN chmod -R go-w "$(brew --prefix)/share/zsh"
 
 # install Hugo
