@@ -18,7 +18,7 @@ vars:
 tasks:
   default:
     cmds:
-      - task: run
+      - task: build
 
   install-brew:
     status:
@@ -60,10 +60,13 @@ tasks:
     sources:
       - '{{ .TASKFILE_DIR }}/package.json'
     generates:
+      - '{{ .TASKFILE_DIR }}/package-lock.json'
       - '{{ .TASKFILE_DIR }}/node_modules/.bin/autoprefixer'
       - '{{ .TASKFILE_DIR }}/node_modules/.bin/prettier'
       - '{{ .TASKFILE_DIR }}/node_modules/.bin/postcss'
     cmds:
+      - cmd: rm "{{ .TASKFILE_DIR }}/package-lock.json"
+        ignore_error: true
       - cmd: npm install
 
   init:
@@ -73,6 +76,7 @@ tasks:
     deps: [install-sass, install-node-packages, init-build]
     sources:
       - '{{ .TASKFILE_DIR }}/package.json'
+      - '{{ .TASKFILE_DIR }}/package-lock.json'
       - '{{ .TASKFILE_DIR }}/test/hugo.toml'
       - '{{ .TASKFILE_DIR }}/test/themes/nightfall/theme.toml'
     generates:
