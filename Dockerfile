@@ -8,15 +8,14 @@ FROM golang:${GOLANG_VERSION} AS golang-binary
 FROM mcr.microsoft.com/appsvc/staticappsclient:stable AS static-app-client
 COPY --from=golang-binary /usr/local/go/ /usr/local/go/
 
-SHELL [ "bash", "--verbose", "--login", "-c" ]
 RUN apt-get update \
-        && apt-get install --yes --no-install-recommends \
-        bash build-essential procps curl file git ruby-full locales \
-        && rm -rf /var/lib/apt/lists/*
+    && apt-get install --yes --no-install-recommends \
+    bash build-essential procps curl wget coreutils file git locales \
+    && rm -rf /var/lib/apt/lists/*
 
 RUN localedef -i en_US -f UTF-8 en_US.UTF-8
 RUN useradd -m -s /bin/bash linuxbrew && \
-        echo 'linuxbrew ALL=(ALL) NOPASSWD:ALL' >>/etc/sudoers
+    echo 'linuxbrew ALL=(ALL) NOPASSWD:ALL' >>/etc/sudoers
 
 USER linuxbrew
 ENV HOME="/home/linuxbrew"
@@ -25,48 +24,40 @@ ENV BREW_EXE="/home/linuxbrew/.linuxbrew/bin/brew"
 ENV NONINTERACTIVE=1
 ENV HOMEBREW_NO_ANALYTICS=1
 
-RUN bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-RUN eval "$("${BREW_EXE}" shellenv)" && brew update
+SHELL [ "bash", "--verbose", "--login", "-c" ]
 
-RUN touch "$HOME/.bash_profile" \
-        && /home/linuxbrew/.linuxbrew/Homebrew/bin/brew shellenv --use-on-cd >>"$HOME/.bash_profile"
+RUN curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh | bash
+RUN eval "$("${BREW_EXE}" shellenv)" && brew update
+RUN (touch "$HOME/.bash_profile" &>/dev/null || true) \
+    && "${BREW_EXE}" shellenv | tee -a "$HOME/.bash_profile"
 
 # install Hugo
 RUN brew install hugo \
-        && hugo version \
-        && brew cleanup --prune=all
+    && hugo version \
+    && brew cleanup --prune=all
 
 # install sass
 RUN brew install sass/sass/sass \
-        && sass --embedded --version \
-        && brew cleanup --prune=all
+    && sass --embedded --version \
+    && brew cleanup --prune=all
 
 USER root
+SHELL [ "bash", "--verbose", "--login", "-c" ]
+
 ENV HOME="/root"
-ENV FNM_DIR="${HOME}/.fnm"
-ENV FNM_EXE="${FNM_DIR}/fnm"
 ENV PATH="/home/linuxbrew/.linuxbrew/bin:${PATH}"
-ENV BREW_EXE="/home/linuxbrew/.linuxbrew/bin/brew"
-
-ENV NODE_VERSION=20
-ENV NONINTERACTIVE=1
-ENV HOMEBREW_NO_ANALYTICS=1
-
-RUN touch "$HOME/.bash_profile" \
-        && /home/linuxbrew/.linuxbrew/Homebrew/bin/brew shellenv --use-on-cd >>"$HOME/.bash_profile"
+RUN (touch "$HOME/.bash_profile" &>/dev/null || true) \
+    && "${BREW_EXE}" shellenv | tee -a "$HOME/.bash_profile"
 
 # install fnm (Fast Node Manager)
-RUN (curl -fsSL "https://fnm.vercel.app/install" | \
-        bash --login -s -- --install-dir "${FNM_DIR}" --skip-shell) \
-        && ( \
-        "${FNM_EXE}" env --shell bash \
-        && echo 'export PATH="$PATH":~/.fnm:~/.local/share/fnm' \
-        ) >> "${HOME}/.bash_profile"
-
-# download and install Node.js
+ENV FNM_PATH="$HOME/.local/share/fnm"
+ENV PATH="${FNM_PATH}:${PATH}"
+RUN (touch "$HOME/.bash_profile" "$HOME/.bashrc" &>/dev/null || true) \
+    && bash --verbose -c "$(curl -o- https://fnm.vercel.app/install)" \
+    && (echo 'export PATH="$PATH":~/.fnm:~/.local/share/fnm' | tee -a "$HOME/.bash_profile")
 RUN fnm install --lts
 
 COPY --chmod=a+x ./entrypoint.sh /entrypoint.sh
 ENTRYPOINT ["/entrypoint.sh"]
-SHELL [ "bash" ]
-CMD [ "bash", "--login", "-c" ]
+SHELL [ "bash", "--login", "-c" ]
+CMD [ ]
