@@ -27,3 +27,7 @@ indent_size = 2
 [*.{sh,bash,zsh}]
 indent_size = 2
 line_ending = lf
+
+[{Dockerfile,dockerfile}]
+indent_size = 4
+

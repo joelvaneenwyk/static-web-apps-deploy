@@ -6,6 +6,7 @@ version: '3'
 
 dotenv:
   - .env
+  - .env.project
 
 vars:
   DOCKER_IMAGE_NAME: 'static-web-apps-deploy'
@@ -114,87 +115,64 @@ tasks:
 
   container:
     deps: [init]
+    aliases:
+      - db
+      - cb
     vars:
       DOCKERFILE_PATH: '{{ .TASKFILE_DIR }}/Dockerfile'
       DOCKER_BUILD_LOG_PATH: '{{ .BUILD_DIR }}/docker-build.log'
+    env:
+      DOCKER_BUILDKIT: 1
     sources:
       - '{{ .DOCKERFILE_PATH }}'
+      - '{{ .TASKFILE_DIR }}/entrypoint.sh'
     generates:
       - '{{ .DOCKER_BUILD_LOG_PATH }}'
     cmds:
       - cmd: >-
           docker buildx build
           --file "{{ fromSlash .DOCKERFILE_PATH }}"
-          -t "static-web-apps-deploy:stable"
+          -t "{{ .DOCKER_IMAGE_TAG}}"
           --progress plain
-          --no-cache
           "{{ fromSlash .TASKFILE_DIR }}"
           >"{{ fromSlash .DOCKER_BUILD_LOG_PATH }}"
 
-  static-sites-client:
-    vars:
-      linux_url: 'https://swalocaldeploy.azureedge.net/downloads/1.0.020981/linux/StaticSitesClient'
-      linux_sha: 'e55db21d0720a12098804559152303e66846bdd94c13a30b30be29a0fc9ae366'
-
-      win_url: 'https://swalocaldeploy.azureedge.net/downloads/1.0.020981/windows/StaticSitesClient.exe'
-      win_sha: '4e4eb72aef26641e236c24929c822500e956bda099ca78054112cadf20261107'
-
-      osx_url: 'https://swalocaldeploy.azureedge.net/downloads/1.0.020981/macOS/StaticSitesClient'
-      osx_sha: 'e0f2ae7ec297510a1b3b9332c0dc0dd962a51adb8ea13cd4f3746d79fc24a7e9'
-    cmds:
-      - cmd: 'mkdir -p "{{ .BIN_DIR }}"'
-      - cmd: 'curl -L -o "{{ .BIN_DIR }}/StaticSitesClient" "{{ .linux_url }}"'
-      - cmd: 'chmod +x "{{ .BIN_DIR }}/StaticSitesClient"'
-      # - cmd: |
-      #     calculated_hash=$(sha256sum "{{ .BIN_DIR }}/StaticSitesClient" | awk '{ print $1 }')
-      #     echo "Calculated hash: $calculated_hash"
-      #     if [ "$calculated_hash" = "{{ .linux_sha }}" ]; then
-      #       echo "Hash match. The file is verified."
-      #     else
-      #       exit 88
-      #     fi
-
   run:
     deps: [container]
-    cmds:
-      - cmd: 'docker run --rm -it "static-web-apps-deploy:stable" {{ .CLI_ARGS }}'
-
-  docker-build:
-    internal: true
-    cmds:
-      - cmd: >-
-          docker build --progress=plain -t "{{ .DOCKER_IMAGE_TAG }}" .
-
-  docker-run:
-    internal: true
-    deps: [docker-build]
     vars:
-      ARGS: '{{ default "" .ARGS }}'
+      ARGS: '{{ default "" .ARGS .CLI_ARGS }}'
     cmds:
       - cmd: >-
           docker run
-          -it
-          --rm
+          --rm -it
           --restart=no
           --log-driver local
           --log-opt max-size=10m
           --log-opt max-file=3
           --workdir "/github/workspace"
-          -v "{{.ROOT_DIR}}:/github/workspace"
-          --name "static-web-apps-deploy"
-          --label "static-web-apps-deploy"
+          -v "{{ fromSlash .TASKFILE_DIR }}":/github/workspace
+          --name "{{ .DOCKER_IMAGE_NAME }}"
+          --label "{{ .DOCKER_IMAGE_NAME }}"
           -e STATIC_APP_LOCATION="./test/public"
-          "static-web-apps-deploy"
-          {{.ARGS}}
+          "{{ .DOCKER_IMAGE_TAG }}"
+          {{ .ARGS }}
+
+  run-interactive:
+    aliases: [dci]
+    interactive: true
+    cmds:
+      - task: run
+        vars: { ARGS: 'bash --login {{ .CLI_ARGS }}' }
 
   run-default:
-    deps: [init]
+    deps: [container]
+    aliases: [rd]
     vars:
       outputLocation: '{{ default "./test/public" .OUTPUT_LOCATION }}'
       skipApiBuild: '{{ default false .SKIP_API_BUILD }}'
       skipDeployOnMissingSecrets: '{{ default false .SKIP_DEPLOY_ON_MISSING_SECRETS }}'
     cmds:
-      - task: docker-run
+      - task: run
         vars:
           ARGS: >-
             --verbose
@@ -226,3 +204,24 @@ tasks:
           --skipAppBuild {{ .SKIP_APP_BUILD }}
           --app "{{ .DOCKER_APP_LOCATION }}"
           --apiToken "{{ .AZURE_STATIC_WEB_APPS_API_TOKEN }}"
+
+  static-sites-client:
+    vars:
+      linux_url: 'https://swalocaldeploy.azureedge.net/downloads/1.0.020981/linux/StaticSitesClient'
+      linux_sha: 'e55db21d0720a12098804559152303e66846bdd94c13a30b30be29a0fc9ae366'
+      win_url: 'https://swalocaldeploy.azureedge.net/downloads/1.0.020981/windows/StaticSitesClient.exe'
+      win_sha: '4e4eb72aef26641e236c24929c822500e956bda099ca78054112cadf20261107'
+      osx_url: 'https://swalocaldeploy.azureedge.net/downloads/1.0.020981/macOS/StaticSitesClient'
+      osx_sha: 'e0f2ae7ec297510a1b3b9332c0dc0dd962a51adb8ea13cd4f3746d79fc24a7e9'
+    cmds:
+      - cmd: 'mkdir -p "{{ .BIN_DIR }}"'
+      - cmd: 'curl -L -o "{{ .BIN_DIR }}/StaticSitesClient" "{{ .linux_url }}"'
+      - cmd: 'chmod +x "{{ .BIN_DIR }}/StaticSitesClient"'
+      # - cmd: |
+      #     calculated_hash=$(sha256sum "{{ .BIN_DIR }}/StaticSitesClient" | awk '{ print $1 }')
+      #     echo "Calculated hash: $calculated_hash"
+      #     if [ "$calculated_hash" = "{{ .linux_sha }}" ]; then
+      #       echo "Hash match. The file is verified."
+      #     else
+      #       exit 88
+      #     fi
