@@ -14,20 +14,39 @@ vars:
   BIN_DIR: '{{ .BUILD_DIR }}/bin'
 
   BREW: '/home/linuxbrew/.linuxbrew/bin/brew'
+  BREW_INSTALL_SCRIPT: '{{ .BIN_DIR }}/install-brew.sh'
+  BREW_INSTALL_URI: 'https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh'
 
 tasks:
   default:
     cmds:
       - task: build
 
-  install-brew:
+  get-install-brew-script:
+    deps: [init-build-directory]
     status:
+      - test -f "{{ .BREW_INSTALL_SCRIPT }}"
+    sources:
+      - '{{ .BREW_INSTALL_URI }}'
+    generates:
+      - "{{ .BREW_INSTALL_SCRIPT }}"
+    cmds:
+      - cmd: |
+          curl -fsSL "{{ .BREW_INSTALL_URI }}" >"{{ fromSlash .BREW_INSTALL_SCRIPT }}"
+        platforms: [darwin, linux]
+      - cmd: scoop install touch && touch "{{ fromSlash .BREW_INSTALL_SCRIPT }}"
+        platforms: [windows]
+
+  install-brew:
+    deps: [get-install-brew-script]
+    status:
+      - test -f "{{ .BREW_INSTALL_SCRIPT }}"
       - test -f "{{ .BREW }}"
       - brew --version
     cmds:
       - cmd: |
-          /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-          if [ -n "$GITHUB_PATH" ]; then
+          "{{ .BREW_INSTALL_SCRIPT }}"
+          if [ -n "${GITHUB_PATH:-}" ]; then
             echo "/home/linuxbrew/.linuxbrew/bin" >> $GITHUB_PATH
             echo "/home/linuxbrew/.linuxbrew/sbin" >> $GITHUB_PATH
           fi
@@ -47,16 +66,26 @@ tasks:
       - cmd: 'scoop install sass'
         platforms: [windows]
 
-  init-build:
+  init-build-directory:
     status:
-      - test -d .build
+      - test -d "{{ .BIN_DIR }}"
     cmds:
       - cmd: cmd /d /c mkdir "{{ .BUILD_DIR }}"
         platforms: [windows]
-      - cmd: mkdir -p "{{ .BUILD_DIR }}"
+      - cmd: cmd /d /c mkdir "{{ .BIN_DIR }}"
+        platforms: [windows]
+      - cmd: mkdir -p "{{ .BIN_DIR }}"
         platforms: [linux, darwin]
 
+  rebuild:
+    cmds:
+      - cmd: rm "{{ .TASKFILE_DIR }}/package-lock.json"
+        ignore_error: true
+      - task: build
+
   install-node-packages:
+    status:
+      - 'test -f "{{ .TASKFILE_DIR }}/package-lock.json"'
     sources:
       - '{{ .TASKFILE_DIR }}/package.json'
     generates:
@@ -65,15 +94,13 @@ tasks:
       - '{{ .TASKFILE_DIR }}/node_modules/.bin/prettier'
       - '{{ .TASKFILE_DIR }}/node_modules/.bin/postcss'
     cmds:
-      - cmd: rm "{{ .TASKFILE_DIR }}/package-lock.json"
-        ignore_error: true
       - cmd: npm install
 
   init:
     deps: [build]
 
   build:
-    deps: [install-sass, install-node-packages, init-build]
+    deps: [install-sass, install-node-packages, init-build-directory]
     sources:
       - '{{ .TASKFILE_DIR }}/package.json'
       - '{{ .TASKFILE_DIR }}/package-lock.json'
