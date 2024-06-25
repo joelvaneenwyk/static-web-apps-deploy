@@ -29,7 +29,7 @@ tasks:
     sources:
       - '{{ .BREW_INSTALL_URI }}'
     generates:
-      - "{{ .BREW_INSTALL_SCRIPT }}"
+      - '{{ .BREW_INSTALL_SCRIPT }}'
     cmds:
       - cmd: |
           curl -fsSL "{{ .BREW_INSTALL_URI }}" >"{{ fromSlash .BREW_INSTALL_SCRIPT }}"
