@@ -11,7 +11,7 @@ env:
   IMAGE_NAME: ${{ github.repository }}
 
 jobs:
-  docker-build:
+  build-and-push-image:
     runs-on: ubuntu-latest
 
     permissions:
@@ -19,6 +19,9 @@ jobs:
       packages: write
       attestations: write
       id-token: write
+
+    outputs:
+      image_name: ${{ steps.get-build-name.outputs.image_name }}
 
     name: Build Docker Image
     steps:
@@ -56,14 +59,24 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      - name: Run
-        uses: addnab/docker-run-action@v3
-        with:
-          image: static-web-apps-deploy:latest
-          run: version
+      - id: get-build-name
+        name: Get Image Name
+        run: |
+          imageName=${{ fromJSON(steps.push.outputs.metadata)['image.name'] }}
+          echo "::set-output name=image_name::$imageName"
+
+  validate-docker-image:
+    needs: build-and-push-image
+    runs-on: ubuntu-latest
+
+    container:
+      image: ${{needs.build-and-push-image.outputs.image_name}}
+      credentials:
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
   build:
-    needs: docker-build
+    needs: validate-docker-image
     strategy:
       fail-fast: false
       matrix:
