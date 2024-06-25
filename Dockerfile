@@ -16,39 +16,44 @@ ENV NODE_VERSION=20
 ENV NONINTERACTIVE=1
 
 RUN apt-get update \
-    && apt-get install --yes --no-install-recommends \
+        && apt-get install --yes --no-install-recommends \
         bash build-essential procps curl file git \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
+        && apt-get clean \
+        && rm -rf /var/lib/apt/lists/*
 
 # install brew
-ENV HOMEBREW_ROOT="${HOME}/homebrew"
-ENV BREW_EXE="${HOMEBREW_ROOT}/bin/brew"
-RUN git clone https://github.com/Homebrew/brew "${HOME}/homebrew" \
-        && eval "$("${BREW_EXE}" shellenv)" \
-        && brew update --force --quiet \
-        && chmod -R go-w "$(brew --prefix)/share/zsh"
+ENV HOMEBREW_PREFIX="/home/linuxbrew/.linuxbrew"
+RUN rm -rf /home/linuxbrew/.linuxbrew/Homebrew \
+        && mkdir -p /home/linuxbrew/.linuxbrew \
+        && git clone "https://github.com/Homebrew/brew" "/home/linuxbrew/.linuxbrew/Homebrew" \
+        && ln -s /home/linuxbrew/.linuxbrew/Homebrew/bin/brew /bin/brew
+
+RUN touch "$HOME/.bash_profile" \
+        && (echo "$(/home/linuxbrew/.linuxbrew/Homebrew/bin/brew shellenv --use-on-cd)" >>"$HOME/.bash_profile")
+
+RUN brew update --force
+RUN chmod -R go-w "$(brew --prefix)/share/zsh"
+
+# install Hugo
+RUN brew install hugo \
+        && hugo version \
+        && brew cleanup --prune=all
+
+# install sass
+RUN brew install sass/sass/sass \
+        && sass --embedded --version \
+        && brew cleanup --prune=all
 
 # install fnm (Fast Node Manager)
 RUN set -o pipefail && (curl -fsSL "https://fnm.vercel.app/install" | \
         bash --login -s -- --install-dir "${FNM_DIR}" --skip-shell) \
-    && ( \
-                "${FNM_EXE}" env --shell bash \
-                && echo 'export PATH="$PATH":~/.fnm:~/.local/share/fnm' \
+        && ( \
+        "${FNM_EXE}" env --shell bash \
+        && echo 'export PATH="$PATH":~/.fnm:~/.local/share/fnm' \
         ) >> "${HOME}/.bash_profile"
 
 # download and install Node.js
 RUN fnm install --lts
-
-# install Hugo
-RUN brew install hugo \
-    && hugo version \
-    && brew cleanup --prune=all
-
-# install sass
-RUN brew install sass/sass/sass \
-    && sass --embedded --version \
-    && brew cleanup --prune=all
 
 ENTRYPOINT ["/entrypoint.sh"]
 SHELL [ "sh" ]
