@@ -10,13 +10,14 @@ if [[ "${INPUT_ACTION:-}" = "${1:-}" ]]; then
   shift
 fi
 
-if [ -e "./.bin/StaticSitesClient" ]; then
-  export SWA=./.bin/StaticSitesClient
-elif [ -e /bin/staticsites/StaticSitesClient ]; then
-  export SWA=./.bin/StaticSitesClient
-else
-    echo "##[error] Could not find StaticSitesClients"
-    exit 1
+export SWA_DIR="${SWA_DIR:-/bin/staticsites}"
+if [ ! -e "${SWA_DIR:-}/StaticSitesClient" ]; then
+  export SWA_DIR=./.bin/
+fi
+
+if [ ! -e "${SWA_DIR:-}/StaticSitesClient" ]; then
+  echo "##[error] Could not find StaticSitesClients"
+  exit 1
 fi
 
 if [ -f "${SWA:-}" ]; then

@@ -19,6 +19,27 @@ docker run --entrypoint "/bin/staticsites/StaticSitesClient" \
   --apiToken "<token>"
 ```
 
+### staticappsclient
+
+```bash
+#$ docker run --rm -it "mcr.microsoft.com/appsvc/staticappsclient:stable"
+#$ uname -a
+Linux 00fc24cb2818 5.15.153.1-microsoft-standard-WSL2 #1 SMP Fri Mar 29 23:14:13 UTC 2024 x86_64 GNU/Linux
+#$ cat /^C
+#$ cat /etc/*_version
+11.8
+#$ cat /etc/*-release
+PRETTY_NAME="Debian GNU/Linux 11 (bullseye)"
+NAME="Debian GNU/Linux"
+VERSION_ID="11"
+VERSION="11 (bullseye)"
+VERSION_CODENAME=bullseye
+ID=debian
+HOME_URL="https://www.debian.org/"
+SUPPORT_URL="https://www.debian.org/support"
+BUG_REPORT_URL="https://bugs.debian.org/"
+```
+
 ## CLI
 
 ```bash
