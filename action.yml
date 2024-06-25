@@ -94,21 +94,21 @@ runs:
         cache-to: type=gha,mode=max
         push: false
 
-    # docker run --entrypoint "/bin/staticsites/StaticSitesClient" \
-    #   --volume "$(pwd)"/build:/root/build \
-    #   mcr.microsoft.com/appsvc/staticappsclient:stable \
-    #   upload \
-    #   --skipAppBuild true \
-    #   --app /root/build \
-    #   --apiToken "<token>"
     - name: Run
       uses: addnab/docker-run-action@v3
       env:
         SKIP_DEPLOY_ON_MISSING_SECRETS: '${{ inputs.skip_deploy_on_missing_secrets }}'
       with:
+        # docker run --entrypoint "/bin/staticsites/StaticSitesClient"
+        # mcr.microsoft.com/appsvc/staticappsclient:stable
         image: static-web-apps-deploy:latest
+        # --volume "$(pwd)"/build:/root/build
+        # upload
+        # --skipAppBuild true
+        # --app /root/build
+        # --apiToken "<token>"
         run: >-
           ${{ inputs.action }}
-          --skipAppBuild ${{ inputs.skip_app_build }}
-          --app ${{ inputs.data_api_location }}
-          --apiToken ${{ inputs.azure_static_web_apps_api_token }}
+          --skipAppBuild "${{ inputs.skip_app_build }}"
+          --app "${{ inputs.data_api_location }}"
+          --apiToken "${{ inputs.azure_static_web_apps_api_token }}"

@@ -46,6 +46,47 @@ jobs:
       - run: npm install
       - run: npm run build
 
+  docker-build:
+    needs: build
+    runs-on: ubuntu-latest
+    name: Build Docker Image
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
+
+      - name: Set up Docker buildx
+        uses: docker/setup-buildx-action@v3.0.0
+        env:
+          DOCKER_BUILDKIT: '1'
+        with:
+          buildkitd-flags: --debug
+          cleanup: false
+
+      - name: Build
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Dockerfile
+          tags: static-web-apps-deploy:latest
+          load: true
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          push: false
+
+      - name: Run
+        uses: addnab/docker-run-action@v3
+        env:
+          SKIP_DEPLOY_ON_MISSING_SECRETS: true
+        with:
+          image: static-web-apps-deploy:latest
+          run: >-
+            build
+            --skipAppBuild false
+            --app ./test
+            --apiToken "invalid_token"
+
   test:
     needs: build
     runs-on: ubuntu-latest
