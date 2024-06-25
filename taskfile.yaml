@@ -123,10 +123,11 @@ tasks:
       - '{{ .DOCKER_BUILD_LOG_PATH }}'
     cmds:
       - cmd: >-
-          docker build
+          docker buildx build
           --file "{{ fromSlash .DOCKERFILE_PATH }}"
           -t "static-web-apps-deploy:stable"
           --progress plain
+          --no-cache
           "{{ fromSlash .TASKFILE_DIR }}"
           >"{{ fromSlash .DOCKER_BUILD_LOG_PATH }}"
 
