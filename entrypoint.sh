@@ -44,59 +44,65 @@
 #  --workdir                       (Default: ) Working directory of the repository
 #
 
-set -eax -o pipefail
+function run_command() {
+  echo "##[cmd] $(realpath "$0" || readlink -f "$0" || $0) $*"
 
-echo "##[cmd] $(realpath "$0" || readlink -f "$0" || $0) $*"
-for argument in "$@"; do
-  printf "%s" "$argument"
-done
+  local SUPPORTED_COMMANDS=(run upload close help version)
 
-export SWA_DIR="${SWA_DIR:-/bin/staticsites}"
-if [ ! -e "${SWA_DIR:-}/StaticSitesClient" ]; then
-  export SWA_DIR=./.bin/
-fi
-export SWA="${SWA_DIR}/StaticSitesClient"
+  local SWA_APP=StaticSitesClient
+  local SWA_DIR="${SWA_DIR:-./.bin/}"
+  if [ ! -e "${SWA_DIR}/${SWA_APP}" ]; then
+    SWA_DIR="/bin/staticsites"
+  fi
+  local SWA="${SWA_DIR}/${SWA_APP}"
 
-export HUGO_VERSION="${HUGO_VERSION:-0.127.0}"
-export BUILD_COMMAND_OVERRIDE="${1:-}"
-export ACTION=""
-
-ARGS=()
-COMMANDS=(run upload close help version)
-IS_OVERRIDE=0
-
-for argument in "$@"; do
-  if [ ${#ARGS[@]} -eq 0 ]; then
-    if [[ X${argument:-} == Xsh* ]] || [[ X${argument:-} == Xbash* ]]; then
-      echo "No action specified, passing all arguments to shell directly."
-      IS_OVERRIDE=1
-    else
-      ARGS+=("${SWA}")
+  local ARG_PASSTHROUGH=0
+  local ARG_FOUND_APP=0
+  local INPUT_ARGS=("$@")
+  local OUTPUT_ARGS=()
+  local OUTPUT_ACTION=""
+  for argument in "${INPUT_ARGS[@]}"; do
+    if [ ${#OUTPUT_ARGS[@]} -eq 0 ]; then
+      if [[ X${argument:-} == Xsh* ]] || [[ X${argument:-} == Xbash* ]]; then
+        echo "No action specified, passing all arguments to shell directly."
+        ARG_PASSTHROUGH=1
+      fi
     fi
+
+    OUTPUT_ARGS+=("${argument}")
+
+    if [[ ${SWA_APP} == *${argument}* ]]; then
+      ARG_FOUND_APP=1
+    elif [[ " ${SUPPORTED_COMMANDS[*]} " =~ [[:space:]]${argument}[[:space:]] ]]; then
+      OUTPUT_ACTION="${argument}"
+    fi
+  done
+
+  if [ $ARG_FOUND_APP == 0 ]; then
+    OUTPUT_ARGS=("${SWA}" "${OUTPUT_ARGS[@]}")
   fi
 
-  ARGS+=("${argument}")
-
-  if [[ " ${COMMANDS[*]} " =~ [[:space:]]${argument}[[:space:]] ]]; then
-    export ACTION="${argument}"
+  if [[ "$ARG_PASSTHROUGH" == "0" ]] && [[ -z "$OUTPUT_ACTION" ]]; then
+    OUTPUT_ACTION="run"
+    OUTPUT_ARGS+=("${OUTPUT_ACTION}")
+    echo "[WARNING] No action specified so appended default 'run' action."
   fi
-done
 
-if [[ "$IS_OVERRIDE" == "0" ]] && [[ -z "$ACTION" ]]; then
-  export ACTION="run"
-  ARGS+=("${ACTION}")
-  echo "[WARNING] No action specified so appended default 'run' action."
-fi
+  if [[ "$ARG_PASSTHROUGH" == "0" ]] && [[ ! "$OUTPUT_ACTION" = "version" ]] && [[ ! " ${OUTPUT_ARGS[*]} " =~ [[:space:]]--verbose[[:space:]] ]]; then
+    OUTPUT_ARGS+=(--verbose)
+  fi
 
-if [[ "$IS_OVERRIDE" == "0" ]] && [[ ! "$ACTION" = "version" ]] && [[ ! " ${ARGS[*]} " =~ [[:space:]]--verbose[[:space:]] ]]; then
-  ARGS+=(--verbose)
-fi
+  cd "${SWA_DIR}" &>/dev/null || true
 
-if [ ! -f "${SWA}" ]; then
-  echo "[error] Could not find 'StaticSitesClients' executable."
-  exit 80
-fi
+  if [[ "$ARG_PASSTHROUGH" == "0" ]] && [ ! -f "${SWA}" ]; then
+    echo "[error] Skipped command '${OUTPUT_ARGS[*]}' due to missing '${SWA_APP}' executable."
+    return 80
+  fi
 
-cd "${SWA_DIR}" || true
-echo "##[cmd] ${ARGS[*]}"
-"${ARGS[@]}"
+  echo "##[cmd] ${OUTPUT_ARGS[*]}"
+  "${OUTPUT_ARGS[@]}"
+}
+
+set -ea -o pipefail
+export HUGO_VERSION="${HUGO_VERSION:-0.127.0}"
+run_command "$@"
