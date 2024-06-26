@@ -278,27 +278,5 @@ tasks:
           --volume "{{ fromSlash .APP_LOCATION }}":"{{ .DOCKER_APP_LOCATION }}"
           {{ .DOCKER_IMAGE }}
           upload
-          --skipAppBuild {{ .SKIP_APP_BUILD }}
           --app "{{ .DOCKER_APP_LOCATION }}"
           --apiToken "{{ .AZURE_STATIC_WEB_APPS_API_TOKEN }}"
-
-  static-sites-client:
-    vars:
-      linux_url: 'https://swalocaldeploy.azureedge.net/downloads/1.0.020981/linux/StaticSitesClient'
-      linux_sha: 'e55db21d0720a12098804559152303e66846bdd94c13a30b30be29a0fc9ae366'
-      win_url: 'https://swalocaldeploy.azureedge.net/downloads/1.0.020981/windows/StaticSitesClient.exe'
-      win_sha: '4e4eb72aef26641e236c24929c822500e956bda099ca78054112cadf20261107'
-      osx_url: 'https://swalocaldeploy.azureedge.net/downloads/1.0.020981/macOS/StaticSitesClient'
-      osx_sha: 'e0f2ae7ec297510a1b3b9332c0dc0dd962a51adb8ea13cd4f3746d79fc24a7e9'
-    cmds:
-      - cmd: 'mkdir -p "{{ .BIN_DIR }}"'
-      - cmd: 'curl -L -o "{{ .BIN_DIR }}/StaticSitesClient" "{{ .linux_url }}"'
-      - cmd: 'chmod +x "{{ .BIN_DIR }}/StaticSitesClient"'
-      # - cmd: |
-      #     calculated_hash=$(sha256sum "{{ .BIN_DIR }}/StaticSitesClient" | awk '{ print $1 }')
-      #     echo "Calculated hash: $calculated_hash"
-      #     if [ "$calculated_hash" = "{{ .linux_sha }}" ]; then
-      #       echo "Hash match. The file is verified."
-      #     else
-      #       exit 88
-      #     fi
