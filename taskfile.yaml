@@ -118,56 +118,6 @@ tasks:
     cmds:
       - cmd: npm run format
 
-  pre-commit:
-    deps: [format]
-    cmds:
-      - cmd: git add .
-
-  container:
-    deps: [init]
-    aliases:
-      - db
-      - cb
-    vars:
-      DOCKERFILE_PATH: '{{ .TASKFILE_DIR }}/Dockerfile'
-      DOCKER_BUILD_LOG_PATH: '{{ .BUILD_DIR }}/docker-build.log'
-    env:
-      DOCKER_BUILDKIT: 1
-    sources:
-      - '{{ .DOCKERFILE_PATH }}'
-      - '{{ .TASKFILE_DIR }}/entrypoint.sh'
-    generates:
-      - '{{ .DOCKER_BUILD_LOG_PATH }}'
-    cmds:
-      - cmd: >-
-          docker buildx build
-          --file "{{ fromSlash .DOCKERFILE_PATH }}"
-          -t "{{ .DOCKER_IMAGE_TAG}}"
-          --progress plain
-          "{{ fromSlash .TASKFILE_DIR }}"
-          >"{{ fromSlash .DOCKER_BUILD_LOG_PATH }}"
-
-  docker-run:
-    deps: [container]
-    aliases: [r, run]
-    vars:
-      ARGS: '{{ coalesce .ARGS .CLI_ARGS "" }}'
-    cmds:
-      - cmd: >-
-          docker run
-          --rm -it
-          --restart=no
-          --log-driver local
-          --log-opt max-size=10m
-          --log-opt max-file=3
-          --workdir "/github/workspace"
-          -v "{{ fromSlash .TASKFILE_DIR }}":/github/workspace
-          --name "{{ .DOCKER_IMAGE_NAME }}"
-          --label "{{ .DOCKER_IMAGE_NAME }}"
-          -e STATIC_APP_LOCATION="./test/public"
-          "{{ .DOCKER_IMAGE_TAG }}"
-          {{ .ARGS }}
-
   install-act:
     status:
       - act --version
@@ -198,7 +148,8 @@ tasks:
     env:
       GIT_TERMINAL_PROMPT: 0
     vars:
-      ACT_GH_JOB_NAME: build-and-push-image
+      # build-and-push-image, test-local-github-action
+      ACT_GH_JOB_NAME: test-local-github-action
       ACT_GH_TOKEN: '{{ default "INVALID_TOKEN" .GITHUB_TOKEN }}'
       ACT_GH_USER: '{{ default "INVALID_USER" .GITHUB_USER }}'
     cmds:
@@ -207,7 +158,7 @@ tasks:
             docker login ghcr.io -u "{{ .ACT_GH_USER }}" --password-stdin
       - cmd: >-
           gh act
-          -j="{{.ACT_GH_JOB_NAME}}"
+          -j="{{ .ACT_GH_JOB_NAME }}"
           -s GITHUB_TOKEN="{{ .ACT_GH_TOKEN }}"
           --replace-ghe-action-token-with-github-com "{{ .ACT_GH_TOKEN }}"
 
@@ -242,42 +193,77 @@ tasks:
       - task: docker-run
         vars: { ARGS: 'bash --login {{ .CLI_ARGS }}' }
 
-  run-default:
-    deps: [container]
-    aliases: [rd]
-    vars:
-      outputLocation: '{{ default "./test/public" .OUTPUT_LOCATION }}'
-      skipApiBuild: '{{ default false .SKIP_API_BUILD }}'
-      skipDeployOnMissingSecrets: '{{ default false .SKIP_DEPLOY_ON_MISSING_SECRETS }}'
+  pre-commit:
+    deps: [format]
     cmds:
-      - task: docker-run
-        vars:
-          ARGS: >-
-            --verbose
-            --workdir "/github/workspace"
-            --app "./test"
-            --appBuildCommand="hugo"
-            --outputLocation="{{.outputLocation}}"
-            {{if eq .skipApiBuild "true"}}--skipApiBuild{{end}}
-            {{if eq .skipDeployOnMissingSecrets "true"}}--skipDeployOnMissingSecrets{{end}}
+      - cmd: git add .
+
+  docker-buildx:
+    deps: [init]
+    aliases:
+      - db
+      - cb
+    vars:
+      DOCKERFILE_PATH: '{{ .TASKFILE_DIR }}/Dockerfile'
+      DOCKER_BUILD_LOG_PATH: '{{ .BUILD_DIR }}/docker-build.log'
+    env:
+      DOCKER_BUILDKIT: 1
+    sources:
+      - '{{ .DOCKERFILE_PATH }}'
+      - '{{ .TASKFILE_DIR }}/entrypoint.sh'
+    generates:
+      - '{{ .DOCKER_BUILD_LOG_PATH }}'
+    cmds:
+      - cmd: >-
+          docker buildx build
+          --file "{{ fromSlash .DOCKERFILE_PATH }}"
+          -t "{{ .DOCKER_IMAGE_TAG}}"
+          --progress plain
+          "{{ fromSlash .TASKFILE_DIR }}"
+          >"{{ fromSlash .DOCKER_BUILD_LOG_PATH }}"
+
+  docker-run:
+    deps: [docker-buildx]
+    aliases: [r, run]
+    vars:
+      ARGS: '{{ coalesce .ARGS .CLI_ARGS "" }}'
+    cmds:
+      - cmd: >-
+          docker run
+          --rm -it
+          --restart=no
+          --log-driver local
+          --log-opt max-size=10m
+          --log-opt max-file=3
+          --workdir "/github/workspace"
+          -v "{{ fromSlash .TASKFILE_DIR }}":/github/workspace
+          --name "{{ .DOCKER_IMAGE_NAME }}"
+          --label "{{ .DOCKER_IMAGE_NAME }}"
+          -e STATIC_APP_LOCATION="./test/public"
+          "{{ .DOCKER_IMAGE_TAG }}"
+          {{ .ARGS }}
 
   run-swa:
+    desc: |
+      Run 'mcr.microsoft.com/appsvc/staticappsclient:stable' image directly so that we can
+      quickly validate if there are any major differences between our image and the
+      officially supported version.
     vars:
+      # As noted in 'https://github.com/Azure/static-web-apps/issues/679#issuecomment-1357799789' it is
+      # expected that 'SKIP_DEPLOY_ON_MISSING_SECRETS' is an environment variable. This conflicts with
+      # documentation which is logged against 'https://github.com/Azure/static-web-apps/issues/679'.
       SKIP_DEPLOY_ON_MISSING_SECRETS: true
       SKIP_APP_BUILD: true
       APP_LOCATION: '{{ .TASKFILE_DIR }}/test/public'
       DOCKER_APP_LOCATION: '/root/build'
-    # https://github.com/Azure/static-web-apps/issues/679#issuecomment-1357799789
-    # skip_deploy_on_missing_secrets: true
-    # ABOVE: this one is documented in few places, but it's expected to be a ENV var!
-    # see https://github.com/Azure/static-web-apps/issues/679
+      DOCKER_IMAGE: 'mcr.microsoft.com/appsvc/staticappsclient:stable'
     env:
       SKIP_DEPLOY_ON_MISSING_SECRETS: '{{ .SKIP_DEPLOY_ON_MISSING_SECRETS }}'
     cmds:
       - cmd: >-
           docker run --entrypoint "/bin/staticsites/StaticSitesClient"
           --volume "{{ fromSlash .APP_LOCATION }}":"{{ .DOCKER_APP_LOCATION }}"
-          mcr.microsoft.com/appsvc/staticappsclient:stable
+          {{ .DOCKER_IMAGE }}
           upload
           --skipAppBuild {{ .SKIP_APP_BUILD }}
           --app "{{ .DOCKER_APP_LOCATION }}"
