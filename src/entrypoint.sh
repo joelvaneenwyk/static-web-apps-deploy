@@ -77,8 +77,8 @@ function run_command() {
   if [ ! -e "${SWA_DIR}/${SWA_APP_NAME}" ]; then
     SWA_DIR="/bin/staticsites"
   fi
-  PATH="${SWA_DIR}:${PATH}"
-  export PATH
+
+  export PATH="${SWA_DIR}:/bin/staticsites:~/.local/share/fnm/:/admin/${PATH+:$PATH}"
 
   if [[ -z "$OUTPUT_ACTION" ]] && [[ $ARG_SHELL_PASSTHROUGH == 0 ]]; then
     OUTPUT_ACTION="run"
@@ -123,6 +123,10 @@ function run_command() {
 set -eax -o pipefail
 
 export HUGO_VERSION="${HUGO_VERSION:-0.127.0}"
+
+if _fnm_env=$(fnm env 2>/dev/null); then
+  eval "$_fnm_env"
+fi
 
 if run_command "$@"; then
   echo "[INFO] Successfully completed 'static-web-apps-deploy' step."
