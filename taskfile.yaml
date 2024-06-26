@@ -78,12 +78,6 @@ tasks:
       - cmd: mkdir -p "{{ .BIN_DIR }}"
         platforms: [linux, darwin]
 
-  rebuild:
-    cmds:
-      - cmd: rm "{{ .TASKFILE_DIR }}/package-lock.json"
-        ignore_error: true
-      - task: build
-
   install-node-packages:
     status:
       - 'test -f "{{ .TASKFILE_DIR }}/package-lock.json"'
@@ -97,10 +91,15 @@ tasks:
     cmds:
       - cmd: npm install
 
-  init:
-    deps: [build]
+  rebuild:
+    desc: Rebuild the Static Web Apps project.
+    cmds:
+      - cmd: rm "{{ .TASKFILE_DIR }}/package-lock.json"
+        ignore_error: true
+      - task: build
 
   build:
+    desc: Build the Static Web Apps project.
     deps: [install-sass, install-node-packages, init-build-directory]
     sources:
       - '{{ .TASKFILE_DIR }}/package.json'
@@ -145,6 +144,7 @@ tasks:
       - cmd: gh extension install nektos/gh-act
 
   act:
+    aliases: [a, gact, ghact]
     desc: Run GitHub Actions locally.
     deps: [install-gh-act]
     env:
@@ -163,11 +163,6 @@ tasks:
           -j="{{ .ACT_GH_JOB_NAME }}"
           -s GITHUB_TOKEN="{{ .ACT_GH_TOKEN }}"
           --replace-ghe-action-token-with-github-com "{{ .ACT_GH_TOKEN }}"
-
-  version:
-    cmds:
-      - task: docker-run
-        vars: { ARGS: 'version' }
 
   dotenv-login:
     internal: true
@@ -201,12 +196,17 @@ tasks:
     aliases: [sh]
     interactive: true
     cmds:
-      - task: docker-run
+      - task: docker
         vars: { CLI_ARGS: 'bash --login {{ .CLI_ARGS }}', INTERACTIVE: true }
 
-  docker-buildx:
+  version:
+    cmds:
+      - task: docker
+        vars: { ARGS: 'version' }
+
+  docker-build:
     internal: true
-    deps: [init]
+    deps: [build]
     aliases:
       - db
       - cb
@@ -231,10 +231,10 @@ tasks:
           "{{ fromSlash .TASKFILE_DIR }}"
           >"{{ fromSlash .DOCKER_BUILD_LOG_PATH }}"
 
-  docker-run:
+  docker:
+    aliases: [d, r, run]
     desc: Run the Static Web Apps Docker container.
-    deps: [docker-buildx]
-    aliases: [r, run]
+    deps: [docker-build]
     vars:
       SKIP_DEPLOY_ON_MISSING_SECRETS: true
       SKIP_APP_BUILD: true
@@ -263,11 +263,12 @@ tasks:
           "{{ .DOCKER_IMAGE }}"
           {{ .ARGS }}
 
-  run-swa:
-    desc: |
-      Run 'mcr.microsoft.com/appsvc/staticappsclient:stable' image directly so that we can
-      quickly validate if there are any major differences between our image and the
-      officially supported version.
+  static-apps-client:
+    aliases: [sac, swa, s]
+    desc: >-
+      Run 'mcr.microsoft.com/appsvc/staticappsclient:stable' image directly so
+      that we can quickly validate if there are any major differences between
+      our image and the officially supported version.
     vars:
       # As noted in 'https://github.com/Azure/static-web-apps/issues/679#issuecomment-1357799789' it is
       # expected that 'SKIP_DEPLOY_ON_MISSING_SECRETS' is an environment variable. This conflicts with
