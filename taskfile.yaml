@@ -226,21 +226,29 @@ tasks:
     deps: [docker-buildx]
     aliases: [r, run]
     vars:
-      ARGS: '{{ coalesce .ARGS .CLI_ARGS "" }}'
+      SKIP_DEPLOY_ON_MISSING_SECRETS: true
+      SKIP_APP_BUILD: true
+      APP_LOCATION: '{{ .TASKFILE_DIR }}/test/public'
+      DOCKER_APP_LOCATION: '/root/build'
+      DOCKER_IMAGE: '{{ .DOCKER_IMAGE_TAG }}'
+      ARGS: >-
+        upload
+        --skipAppBuild
+        --app "{{ .DOCKER_APP_LOCATION }}"
+        --apiToken "{{ .AZURE_STATIC_WEB_APPS_API_TOKEN }}"
+      ARGS2: '{{ coalesce .ARGS .CLI_ARGS "" }}'
     cmds:
       - cmd: >-
           docker run
-          --rm -it
+          --rm
+          --volume "{{ fromSlash .APP_LOCATION }}":"{{ .DOCKER_APP_LOCATION }}"
           --restart=no
           --log-driver local
           --log-opt max-size=10m
           --log-opt max-file=3
-          --workdir "/github/workspace"
-          -v "{{ fromSlash .TASKFILE_DIR }}":/github/workspace
+          --workdir "{{ .DOCKER_APP_LOCATION }}"
           --name "{{ .DOCKER_IMAGE_NAME }}"
-          --label "{{ .DOCKER_IMAGE_NAME }}"
-          -e STATIC_APP_LOCATION="./test/public"
-          "{{ .DOCKER_IMAGE_TAG }}"
+          "{{ .DOCKER_IMAGE }}"
           {{ .ARGS }}
 
   run-swa:
@@ -261,7 +269,9 @@ tasks:
       SKIP_DEPLOY_ON_MISSING_SECRETS: '{{ .SKIP_DEPLOY_ON_MISSING_SECRETS }}'
     cmds:
       - cmd: >-
-          docker run --entrypoint "/bin/staticsites/StaticSitesClient"
+          docker run
+          --rm
+          --entrypoint "/bin/staticsites/StaticSitesClient"
           --volume "{{ fromSlash .APP_LOCATION }}":"{{ .DOCKER_APP_LOCATION }}"
           {{ .DOCKER_IMAGE }}
           upload

@@ -62,34 +62,39 @@ function run_command() {
   local OUTPUT_ARGS=()
   local OUTPUT_ACTION=""
   for argument in "${INPUT_ARGS[@]}"; do
-    if [ ${#OUTPUT_ARGS[@]} -eq 0 ]; then
-      if [[ X${argument:-} == Xsh* ]] || [[ X${argument:-} == Xbash* ]]; then
-        echo "No action specified, passing all arguments to shell directly."
-        ARG_PASSTHROUGH=1
-      fi
+    if [ ${#OUTPUT_ARGS[@]} -eq 0 ] && [[ X${argument:-} == Xsh* ]] || [[ X${argument:-} == Xbash* ]]; then
+      echo "No action specified, passing all arguments to shell directly."
+      ARG_PASSTHROUGH=1
     fi
 
-    OUTPUT_ARGS+=("${argument}")
+    if [ -n "${argument}" ]; then
+      OUTPUT_ARGS+=("${argument}")
 
-    if [[ ${SWA_APP} == *${argument}* ]]; then
-      ARG_FOUND_APP=1
-    elif [[ " ${SUPPORTED_COMMANDS[*]} " =~ [[:space:]]${argument}[[:space:]] ]]; then
-      OUTPUT_ACTION="${argument}"
+      if [[ "X${SWA_APP}" == *X${argument}* ]]; then
+        ARG_FOUND_APP=1
+      fi
+
+      if [[ " ${SUPPORTED_COMMANDS[*]} " =~ [[:space:]]${argument}[[:space:]] ]]; then
+        OUTPUT_ACTION="${argument}"
+      fi
     fi
   done
 
-  if [ $ARG_FOUND_APP == 0 ]; then
+  if [[ $ARG_FOUND_APP == 0 ]]; then
     OUTPUT_ARGS=("${SWA}" "${OUTPUT_ARGS[@]}")
+  else
+    printf "[INFO] Found '%s' executable. Skipped prepending executable to argument list.\n" "${SWA}"
   fi
 
-  if [[ "$ARG_PASSTHROUGH" == "0" ]] && [[ -z "$OUTPUT_ACTION" ]]; then
+  if [[ -z "$OUTPUT_ACTION" ]] && [[ $ARG_PASSTHROUGH == 0 ]]; then
     OUTPUT_ACTION="run"
     OUTPUT_ARGS+=("${OUTPUT_ACTION}")
     echo "[WARNING] No action specified so appended default 'run' action."
   fi
 
-  if [[ "$ARG_PASSTHROUGH" == "0" ]] && [[ ! "$OUTPUT_ACTION" = "version" ]] && [[ ! " ${OUTPUT_ARGS[*]} " =~ [[:space:]]--verbose[[:space:]] ]]; then
+  if [[ ! " ${OUTPUT_ARGS[*]} " =~ [[:space:]]--verbose[[:space:]] ]] && [[ "$ARG_PASSTHROUGH" == "0" ]] && [[ ! "$OUTPUT_ACTION" = "version" ]]; then
     OUTPUT_ARGS+=(--verbose)
+    echo "[INFO] Enabled verbose logging."
   fi
 
   cd "${SWA_DIR}" &>/dev/null || true
@@ -103,6 +108,16 @@ function run_command() {
   "${OUTPUT_ARGS[@]}"
 }
 
-set -ea -o pipefail
-export HUGO_VERSION="${HUGO_VERSION:-0.127.0}"
-run_command "$@"
+function main() {
+  set -ea -o pipefail
+  export HUGO_VERSION="${HUGO_VERSION:-0.127.0}"
+  if run_command "$@"; then
+    echo "[INFO] Successfully completed 'static-web-apps-deploy' step."
+  else
+    result=$?
+    echo "[ERROR] Failed to static-web-apps-deploy' step. Error code: ${result}"
+    exit ${result}
+  fi
+}
+
+main "$@"
