@@ -112,7 +112,8 @@ function run_command() {
   if [[ $ARG_SHELL_PASSTHROUGH == 0 ]] && [ ! -f "${SWA_APP_PATH}" ]; then
     echo "[error] Skipped command due to missing '${SWA_APP_NAME}' executable."
     result=80
-  else "${OUTPUT_ARGS[@]}"
+  else
+    "${OUTPUT_ARGS[@]}"
     result=$?
   fi
   echo "##[endgroup]"
