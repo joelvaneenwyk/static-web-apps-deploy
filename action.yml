@@ -80,10 +80,18 @@ runs:
       id: globals
       shell: bash
       env:
-        RAW_INPUTS_REPO_TOKEN: ${{ inputs.repo_token }}
-        RAW_INPUTS_APP_LOCATION: ${{ inputs.app_location }}
         RAW_GITHUB_ACTOR: ${{ github.actor }}
         RAW_GITHUB_REPOSITORY: ${{ github.action_repository || github.repository }}
+        RAW_GITHUB_WORKSPACE: ${{ github.workspace }}
+
+        RAW_INPUTS_REPO_TOKEN: ${{ inputs.repo_token }}
+        RAW_INPUTS_APP_LOCATION: ${{ inputs.app_location }}
+        RAW_INPUTS_APP_ARTIFACT_LOCATION: ${{ inputs.app_artifact_location }}
+        RAW_INPUTS_DATA_API_LOCATION: ${{ inputs.app_artifact_location }}
+        RAW_INPUTS_ACTION: ${{ inputs.action || 'deploy' }}
+        RAW_INPUTS_AZURE_STATIC_WEB_APPS_API_TOKEN: ${{ inputs.azure_static_web_apps_api_token || 'no_token_provided' }}
+        RAW_INPUTS_SKIP_DEPLOY_ON_MISSING_SECRETS: ${{ inputs.skip_deploy_on_missing_secrets == 'true' && '--skipDeployOnMissingSecrets' }}
+        RAW_INPUTS_SKIP_APP_BUILD: ${{ inputs.skip_app_build == 'true' && '--skipAppBuild' }}
       run: |
         function write_env() {
           echo "TA_USERNAME=$RAW_GITHUB_ACTOR"
@@ -93,17 +101,18 @@ runs:
           echo "TA_REPOSITORY=$RAW_GITHUB_REPOSITORY"
           echo "TA_GHCR_IMAGE=ghcr.io/$RAW_GITHUB_REPOSITORY"
 
-          TA_WORKSPACE_DOCKER_PATH="/workspace/$RAW_INPUTS_APP_LOCATION"
-          echo "TA_WORKSPACE_LOCAL_PATH=${{ github.workspace }}/$RAW_INPUTS_APP_LOCATION"
+          echo "TA_WORKSPACE_LOCAL_PATH=$RAW_GITHUB_WORKSPACE/${RAW_INPUTS_APP_LOCATION#./}"
+
+          TA_WORKSPACE_DOCKER_PATH="/workspace/${RAW_INPUTS_APP_LOCATION#./}"
           echo "TA_WORKSPACE_DOCKER_PATH=$TA_WORKSPACE_DOCKER_PATH"
 
-          echo "TA_CLI_INPUT_ACTION=${{ inputs.action || 'deploy' }}"
+          echo "TA_CLI_INPUT_ACTION=$RAW_INPUTS_ACTION"
           echo "TA_CLI_APP_LOCATION=--app $TA_WORKSPACE_DOCKER_PATH"
-          echo "TA_CLI_DATA_APP_ARTIFACT_LOCATION=--appArtifactLocation $TA_WORKSPACE_DOCKER_PATH/${{ inputs.app_artifact_location }}"
-          echo "TA_CLI_DATA_API_LOCATION=--api $TA_WORKSPACE_DOCKER_PATH/${{ inputs.data_api_location }}"
-          echo "TA_CLI_AZURE_STATIC_WEB_APPS_API_TOKEN=--apiToken ${{ inputs.azure_static_web_apps_api_token || 'no_token_provided' }}"
-          echo "TA_CLI_SKIP_DEPLOY_ON_MISSING_SECRETS=${{ inputs.skip_deploy_on_missing_secrets == 'true' && '--skipDeployOnMissingSecrets' }}"
-          echo "TA_CLI_SKIP_APP_BUILD=${{ inputs.skip_app_build == 'true' && '--skipAppBuild' }}"
+          echo "TA_CLI_DATA_APP_ARTIFACT_LOCATION=--appArtifactLocation $TA_WORKSPACE_DOCKER_PATH/${RAW_INPUTS_APP_ARTIFACT_LOCATION#./}"
+          echo "TA_CLI_DATA_API_LOCATION=--api $TA_WORKSPACE_DOCKER_PATH/${RAW_INPUTS_DATA_API_LOCATION#./}"
+          echo "TA_CLI_AZURE_STATIC_WEB_APPS_API_TOKEN=--apiToken $RAW_INPUTS_AZURE_STATIC_WEB_APPS_API_TOKEN"
+          echo "TA_CLI_SKIP_DEPLOY_ON_MISSING_SECRETS=$RAW_INPUTS_SKIP_DEPLOY_ON_MISSING_SECRETS"
+          echo "TA_CLI_SKIP_APP_BUILD=$RAW_INPUTS_SKIP_APP_BUILD"
         }
         set -eax -o pipefail
         write_env | tee -a "${GITHUB_OUTPUT}"
