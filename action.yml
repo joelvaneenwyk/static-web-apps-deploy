@@ -94,15 +94,15 @@ runs:
         RAW_INPUTS_SKIP_APP_BUILD: ${{ inputs.skip_app_build == 'true' && '--skipAppBuild' || null }}
       run: |
         function write_env() {
-          set -ea -o pipefail
+          set -eax -o pipefail
 
-          echo "TA_USERNAME=$RAW_GITHUB_ACTOR"
-          echo "TA_PASSWORD=$RAW_INPUTS_REPO_TOKEN"
-          echo "TA_TOKEN=$RAW_INPUTS_REPO_TOKEN"
+          echo "TA_USERNAME=\"$RAW_GITHUB_ACTOR\""
+          echo "TA_PASSWORD=\"$RAW_INPUTS_REPO_TOKEN\""
+          echo "TA_TOKEN=\"$RAW_INPUTS_REPO_TOKEN\""
 
           local RAW_GITHUB_REPOSITORY="${RAW_GITHUB_REPOSITORY:-joelvaneenwyk/static-web-apps-deploy:develop}"
-          echo "TA_REPOSITORY=$RAW_GITHUB_REPOSITORY"
-          echo "TA_GHCR_IMAGE=ghcr.io/$RAW_GITHUB_REPOSITORY"
+          echo "TA_REPOSITORY=\"$RAW_GITHUB_REPOSITORY\""
+          echo "TA_GHCR_IMAGE=\"ghcr.io/$RAW_GITHUB_REPOSITORY\""
 
           local RAW_INPUTS_APP_LOCATION="${RAW_INPUTS_APP_LOCATION:-}"
           RAW_INPUTS_APP_LOCATION="${RAW_INPUTS_APP_LOCATION#./}"
@@ -137,11 +137,11 @@ runs:
           echo "TA_CLI_SKIP_DEPLOY_ON_MISSING_SECRETS=$RAW_INPUTS_SKIP_DEPLOY_ON_MISSING_SECRETS"
           echo "TA_CLI_SKIP_APP_BUILD=$RAW_INPUTS_SKIP_APP_BUILD"
 
-          [[ -n "${RAW_INPUTS_AZURE_STATIC_WEB_APPS_API_TOKEN:-}" ]] \
-            && echo "TA_CLI_AZURE_STATIC_WEB_APPS_API_TOKEN=--apiToken \"$RAW_INPUTS_AZURE_STATIC_WEB_APPS_API_TOKEN\""
+          [ -n "${RAW_INPUTS_AZURE_STATIC_WEB_APPS_API_TOKEN:-}" ] \
+            && echo "TA_CLI_AZURE_STATIC_WEB_APPS_API_TOKEN=--apiToken \"$RAW_INPUTS_AZURE_STATIC_WEB_APPS_API_TOKEN\"" \
+            || echo "TA_CLI_AZURE_STATIC_WEB_APPS_API_TOKEN="
         }
         write_env | tee -a "${GITHUB_OUTPUT:-./.env.action_output}"
-
     - name: Setup Docker Buildx
       uses: docker/setup-buildx-action@v3
 
