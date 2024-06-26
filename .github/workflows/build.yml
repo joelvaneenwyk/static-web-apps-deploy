@@ -61,7 +61,7 @@ jobs:
         shell: bash
         env:
           IMAGE_NAME: ${{ fromJSON(steps.push.outputs.metadata)['image.name'] }}
-        run: echo 'image_name="${IMAGE_NAME}"' >> $GITHUB_OUTPUT
+        run: echo "image_name=${IMAGE_NAME}" >> $GITHUB_OUTPUT
 
   # Inspired by the following example:
   #
@@ -69,7 +69,6 @@ jobs:
   validate-docker-image:
     needs: build-and-push-image
     runs-on: ubuntu-latest
-
     name: Validate Docker Image
     steps:
       - name: Login Container Registry
@@ -80,9 +79,8 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
           logout: false
 
-      - name: Test 'version' Command
-        run: |
-          echo "Checking image..."
+      - name: Test 'StaticSitesClient version'
+        run: >-
           docker run --rm "${{needs.build-and-push-image.outputs.image_name}}" version
 
   test-local-github-action:
