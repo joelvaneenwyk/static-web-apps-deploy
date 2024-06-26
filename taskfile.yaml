@@ -4,9 +4,10 @@
 
 version: '3'
 
+set: [pipefail]
+shopt: [globstar]
 dotenv:
   - .env
-  - .env.project
 
 vars:
   DOCKER_IMAGE_NAME: 'static-web-apps-deploy'
@@ -17,6 +18,12 @@ vars:
   BREW: '/home/linuxbrew/.linuxbrew/bin/brew'
   BREW_INSTALL_SCRIPT: '{{ .BIN_DIR }}/install-brew.sh'
   BREW_INSTALL_URI: 'https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh'
+
+  RUN_WINDOWS: 'cmd /d /c'
+  RUN_UNIX: 'sh -c'
+  RUN: '{{if eq OS "windows"}}{{.RUN_WINDOWS}}{{ else }}{{.RUN_UNIX}}{{ end }}'
+
+  DOTENV_VAULT: npx --yes dotenv-vault@latest
 
 tasks:
   default:
@@ -52,8 +59,6 @@ tasks:
             echo "/home/linuxbrew/.linuxbrew/sbin" >> $GITHUB_PATH
           fi
         platforms: [darwin, linux]
-      - cmd: scoop install brew
-        platforms: [windows]
 
   install-sass:
     deps: [install-brew]
@@ -94,8 +99,8 @@ tasks:
   rebuild:
     desc: Rebuild the Static Web Apps project.
     cmds:
-      - cmd: rm "{{ .TASKFILE_DIR }}/package-lock.json"
-        ignore_error: true
+      - task: delete
+        vars: { TARGET: '{{ .TASKFILE_DIR }}/package-lock.json' }
       - task: build
 
   build:
@@ -144,25 +149,28 @@ tasks:
       - cmd: gh extension install nektos/gh-act
 
   act:
-    aliases: [a, gact, ghact]
+    deps: [install-gh-act, dotenv-pull]
     desc: Run GitHub Actions locally.
-    deps: [install-gh-act]
+    aliases: [a, gact, ghact]
+    dotenv: ['.env']
     env:
       GIT_TERMINAL_PROMPT: 0
     vars:
       # build-and-push-image, test-local-github-action
       ACT_GH_JOB_NAME: test-local-github-action
-      ACT_GH_TOKEN: '{{ default "INVALID_TOKEN" .GITHUB_TOKEN }}'
-      ACT_GH_USER: '{{ default "INVALID_USER" .GITHUB_USER }}'
+      ACT_GH_TOKEN: '{{ .GITHUB_TOKEN | default "INVALID_TOKEN" }}'
+      ACT_GH_USER: '{{ .GITHUB_USER | default "INVALID_USER" }}'
     cmds:
       - cmd: |
           echo "{{ .ACT_GH_TOKEN }}" | \
             docker login ghcr.io -u "{{ .ACT_GH_USER }}" --password-stdin
+        silent: true
       - cmd: >-
           gh act
           -j="{{ .ACT_GH_JOB_NAME }}"
           -s GITHUB_TOKEN="{{ .ACT_GH_TOKEN }}"
           --replace-ghe-action-token-with-github-com "{{ .ACT_GH_TOKEN }}"
+        silent: true
 
   dotenv-login:
     internal: true
@@ -173,7 +181,7 @@ tasks:
     generates:
       - .env.me
     cmds:
-      - cmd: npx --yes dotenv-vault@latest login --yes
+      - cmd: '{{ .DOTENV_VAULT }} login --yes'
 
   dotenv-push:
     internal: true
@@ -183,7 +191,18 @@ tasks:
       - 'test -f "{{ .TASKFILE_DIR }}/.env.me"'
       - 'test -f "{{ .TASKFILE_DIR }}/.env.vault"'
     cmds:
-      - cmd: npx --yes dotenv-vault@latest push --yes
+      - cmd: '{{ .DOTENV_VAULT }} push --yes'
+
+  dotenv-pull:
+    deps: [dotenv-login]
+    status:
+      - 'test -f "{{ .TASKFILE_DIR }}/.env"'
+    sources:
+      - .env.vault
+    generates:
+      - .env
+    cmds:
+      - cmd: '{{ .DOTENV_VAULT }} pull --yes'
 
   pre-commit:
     desc: Run formatter and add files to 'git' automatically.
@@ -203,6 +222,40 @@ tasks:
     cmds:
       - task: docker
         vars: { ARGS: 'version' }
+
+  delete:
+    internal: true
+    requires: { vars: [TARGET] }
+    status:
+      - 'test ! -d "{{.TARGET}}"'
+      - 'test ! -f "{{.TARGET}}"'
+    cmds:
+      - task: delete-dir
+        vars: { TARGET_DIR: '{{ .TARGET }}' }
+      - task: delete-file
+        vars: { TARGET_FILE: '{{ .TARGET }}' }
+
+  delete-dir:
+    internal: true
+    requires: { vars: [TARGET_DIR] }
+    status:
+      - 'test ! -d "{{.TARGET_DIR}}"'
+    cmds:
+      - cmd: '{{.RUN}} if exist "{{ fromSlash .TARGET_DIR }}" rmdir /s /q "{{ fromSlash .TARGET_DIR }}"'
+        platforms: [windows]
+      - cmd: '{{.RUN}} rm -rf "{{.TARGET_DIR}}"'
+        platforms: [linux, darwin]
+
+  delete-file:
+    internal: true
+    requires: { vars: [TARGET_FILE] }
+    status:
+      - 'test ! -f "{{.TARGET_FILE}}"'
+    cmds:
+      - cmd: '{{.RUN}} if exist "{{fromSlash .TARGET_FILE}}" del "{{fromSlash .TARGET_FILE}}"'
+        platforms: [windows]
+      - cmd: '{{.RUN}} rm -f "{{.TARGET_FILE}}"'
+        platforms: [linux, darwin]
 
   docker-build:
     internal: true
@@ -269,6 +322,7 @@ tasks:
       Run 'mcr.microsoft.com/appsvc/staticappsclient:stable' image directly so
       that we can quickly validate if there are any major differences between
       our image and the officially supported version.
+    dotenv: [.env]
     vars:
       # As noted in 'https://github.com/Azure/static-web-apps/issues/679#issuecomment-1357799789' it is
       # expected that 'SKIP_DEPLOY_ON_MISSING_SECRETS' is an environment variable. This conflicts with
