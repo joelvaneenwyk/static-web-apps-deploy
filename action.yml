@@ -81,46 +81,28 @@ runs:
       shell: bash
       run: |
         function write_env() {
-          local github_actor='${{ github.actor }}'
-          echo "TA_USERNAME=${github_actor}"
+          echo "TA_USERNAME=${{ github.actor }}"
+          echo "TA_PASSWORD=${{ inputs.repo_token }}"
+          echo "TA_TOKEN=${{ inputs.repo_token }}"
 
-          local input_repo_token='${{ inputs.repo_token }}'
-          echo "TA_PASSWORD=${input_repo_token}"
-          echo "TA_TOKEN=${input_repo_token}"
+          TA_REPOSITORY="${{ github.action_repository || github.repository }}"
+          echo "TA_REPOSITORY=$TA_REPOSITORY"
+          echo "TA_GHCR_IMAGE=ghcr.io/$TA_REPOSITORY"
 
-          local github_repository='${{ github.repository }}'
-          local action_repository='${{ github.action_repository }}'
-          local repository="${action_repository:-${github_repository}}"
-          echo "TA_REPOSITORY=${repository}"
-          echo "TA_GHCR_IMAGE=ghcr.io/${repository}"
+          TA_APP_LOCATION="${{ inputs.app_location }}"
+          TA_WORKSPACE_DOCKER_PATH="/workspace/$TA_APP_LOCATION"
+          echo "TA_WORKSPACE_LOCAL_PATH=${{ github.workspace }}/$TA_APP_LOCATION"
+          echo "TA_WORKSPACE_DOCKER_PATH=$TA_WORKSPACE_DOCKER_PATH"
 
-          local base_path=".git_action_build/static-web-apps-deploy"
-          local workspace='${{ github.workspace }}'
-          echo "TA_REL_PATH=${base_path}"
-          echo "TA_PATH=${workspace}/${base_path}"
-
-          echo 'TA_CLI_INPUT_ACTION="${{ inputs.action }}"'
-
-          local data_api_location='${{ inputs.data_api_location }}'
-          if [ -n "${data_api_location}" ]; then
-            echo "TA_CLI_DATA_API_LOCATION="--app "${data_api_location}"""
-          fi
-
-          local azure_static_web_apps_api_token='${{ inputs.azure_static_web_apps_api_token }}'
-          if [ -n "${azure_static_web_apps_api_token}" ]; then
-            echo "TA_CLI_AZURE_STATIC_WEB_APPS_API_TOKEN="--apiToken "${azure_static_web_apps_api_token}"""
-          fi
-
-          local skip_deploy_on_missing_secrets='${{ inputs.skip_deploy_on_missing_secrets }}'
-          if [ "${skip_deploy_on_missing_secrets}" == "true" ]; then
-            echo 'TA_CLI_SKIP_DEPLOY_ON_MISSING_SECRETS="--skipDeployOnMissingSecrets"'
-          fi
-
-          local skip_app_build='${{ inputs.skip_app_build }}'
-          if [ "${skip_app_build}" == "true" ]; then
-            echo "TA_CLI_SKIP_APP_BUILD=--skipAppBuild"
-          fi
+          echo "TA_CLI_INPUT_ACTION=${{ inputs.action || 'deploy' }}"
+          echo "TA_CLI_APP_LOCATION=--app $TA_WORKSPACE_DOCKER_PATH"
+          echo "TA_CLI_DATA_APP_ARTIFACT_LOCATION=--appArtifactLocation $TA_WORKSPACE_DOCKER_PATH/${{ inputs.app_artifact_location }}"
+          echo "TA_CLI_DATA_API_LOCATION=--api $TA_WORKSPACE_DOCKER_PATH/${{ inputs.data_api_location }}"
+          echo "TA_CLI_AZURE_STATIC_WEB_APPS_API_TOKEN=--apiToken ${{ inputs.azure_static_web_apps_api_token || 'no_token_provided' }}"
+          echo "TA_CLI_SKIP_DEPLOY_ON_MISSING_SECRETS=${{ inputs.skip_deploy_on_missing_secrets == 'true' && '--skipDeployOnMissingSecrets' }}"
+          echo "TA_CLI_SKIP_APP_BUILD=${{ inputs.skip_app_build == 'true' && '--skipAppBuild' }}"
         }
+        set -eax -o pipefail
         write_env | tee -a "${GITHUB_OUTPUT}"
 
     - name: Setup Docker Buildx
@@ -162,9 +144,21 @@ runs:
 
     - name: Run
       shell: bash
+      env:
+        WORKSPACE_LOCAL_PATH: "${{ steps.globals.outputs.TA_WORKSPACE_PATH }}"
+        WORKSPACE_DOCKER_PATH: "${{ steps.globals.outputs.TA_WORKSPACE_PATH }}"
+        CLI_ARGS: >-
+          ${{ steps.globals.outputs.TA_CLI_INPUT_ACTION }}
+          ${{ steps.globals.outputs.TA_CLI_APP_LOCATION }}
+          ${{ steps.globals.outputs.TA_CLI_DATA_APP_ARTIFACT_LOCATION }}
+          ${{ steps.globals.outputs.TA_CLI_DATA_API_LOCATION }}
+          ${{ steps.globals.outputs.TA_CLI_AZURE_STATIC_WEB_APPS_API_TOKEN }}
+          ${{ steps.globals.outputs.TA_CLI_SKIP_DEPLOY_ON_MISSING_SECRETS }}
+          ${{ steps.globals.outputs.TA_CLI_SKIP_APP_BUILD }}
       run: >-
-        docker run --rm "${{ steps.get-image-name.outputs.image_name }}"
-        ${{ steps.globals.outputs.TA_CLI_INPUT_ACTION }}
-        ${{ steps.globals.outputs.TA_CLI_SKIP_DEPLOY_ON_MISSING_SECRETS }}
-        ${{ steps.globals.outputs.TA_CLI_DATA_API_LOCATION }}
-        ${{ steps.globals.outputs.TA_CLI_AZURE_STATIC_WEB_APPS_API_TOKEN }}
+        docker run
+        --rm
+        -v "$WORKSPACE_LOCAL_PATH":"$WORKSPACE_DOCKER_PATH"
+        --workdir "$WORKSPACE_DOCKER_PATH"
+        "${{ steps.get-image-name.outputs.image_name }}"
+        $CLI_ARGS
