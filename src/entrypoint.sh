@@ -101,6 +101,15 @@ function run_command() {
     printf "[INFO] Prepended '%s' executable to command list.\n" "${SWA_APP_PATH}"
   fi
 
+  current_dir="$(pwd)"
+  if git_version="$(git --version 2>/dev/null)"; then
+    echo "[INFO] Using git version: ${git_version}"
+
+    if git config --global --add safe.directory "${current_dir}" 2>/dev/null; then
+      echo "[INFO] Added '${current_dir}' to git 'safe.directory' global config."
+    fi
+  fi
+
   echo "##[group] ${OUTPUT_ARGS[*]}"
   echo "cwd: $(pwd)"
   echo "npm: $(command -v npm 2>/dev/null)"
