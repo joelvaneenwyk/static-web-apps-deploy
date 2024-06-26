@@ -63,27 +63,6 @@ jobs:
           IMAGE_NAME: ${{ fromJSON(steps.push.outputs.metadata)['image.name'] }}
         run: echo "image_name=${IMAGE_NAME}" >> $GITHUB_OUTPUT
 
-  # Inspired by the following example:
-  #
-  #   - https://github.com/docker/build-push-action/issues/614#issuecomment-1130396065
-  validate-docker-image:
-    needs: build-and-push-image
-    runs-on: ubuntu-latest
-    name: Validate Docker Image
-    steps:
-      - name: Login Container Registry
-        uses: docker/login-action@v3
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-          logout: false
-
-      - name: 'Check Version'
-        run: >-
-          docker run --rm "${{needs.build-and-push-image.outputs.image_name}}"
-          version
-
   test-local-github-action:
     needs: build-and-push-image
     runs-on: ubuntu-latest
@@ -107,6 +86,27 @@ jobs:
           app_build_command: npm run build
           repo_token: ${{ github.token }}
           skip_deploy_on_missing_secrets: true
+
+  # Inspired by the following example:
+  #
+  #   - https://github.com/docker/build-push-action/issues/614#issuecomment-1130396065
+  validate-docker-image:
+    needs: build-and-push-image
+    runs-on: ubuntu-latest
+    name: Validate Docker Image
+    steps:
+      - name: Login Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+          logout: false
+
+      - name: 'Check Version'
+        run: >-
+          docker run --rm "${{needs.build-and-push-image.outputs.image_name}}"
+          version
 
   build-local-test-site:
     needs: build-and-push-image

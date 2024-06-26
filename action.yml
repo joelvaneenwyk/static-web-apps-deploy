@@ -175,14 +175,15 @@ runs:
       shell: bash
       env:
         DEFAULT_IMAGE_NAME: 'ghcr.io/joelvaneenwyk/static-web-apps-deploy:develop'
-        IMAGE_NAME: ${{ steps.push.outputs.metadata && fromJSON(steps.push.outputs.metadata)['image.name'] }}
-      run: echo "image_name="${IMAGE_NAME:-DEFAULT_IMAGE_NAME}"" >> $GITHUB_OUTPUT
+        IMAGE_NAME: ${{ steps.docker-push.outputs.metadata && fromJSON(steps.docker-push.outputs.metadata)['image.name'] }}
+      run: echo "image_name="${IMAGE_NAME:-${DEFAULT_IMAGE_NAME}}"" >> $GITHUB_OUTPUT
 
     - name: Run
       shell: bash
       env:
         WORKSPACE_LOCAL_PATH: '${{ steps.globals.outputs.TA_WORKSPACE_PATH }}'
         WORKSPACE_DOCKER_PATH: '${{ steps.globals.outputs.TA_WORKSPACE_PATH }}'
+        DOCKER_IMAGE: '${{ steps.get-image-name.outputs.image_name }}'
         CLI_ARGS: >-
           ${{ steps.globals.outputs.TA_CLI_INPUT_ACTION }}
           ${{ steps.globals.outputs.TA_CLI_APP_LOCATION }}
@@ -192,10 +193,9 @@ runs:
           ${{ steps.globals.outputs.TA_CLI_SKIP_DEPLOY_ON_MISSING_SECRETS }}
           ${{ steps.globals.outputs.TA_CLI_SKIP_APP_BUILD }}
       run: >-
-        docker run
-        --rm
+        docker run --rm
         -v "$WORKSPACE_LOCAL_PATH":"$WORKSPACE_DOCKER_PATH"
         -v "$WORKSPACE_LOCAL_PATH/.git":"$WORKSPACE_DOCKER_PATH/.git":ro
         --workdir "$WORKSPACE_DOCKER_PATH"
-        "${{ steps.get-image-name.outputs.image_name }}"
+        "$DOCKER_IMAGE"
         $CLI_ARGS
