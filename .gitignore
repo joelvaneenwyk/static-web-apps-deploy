@@ -9,6 +9,8 @@
 .build/
 .task/
 
+/.mise.toml
+
 test/themes/nightfall/exampleSite/
 test/themes/nightfall/public/
 test/themes/nightfall/resources/_gen/

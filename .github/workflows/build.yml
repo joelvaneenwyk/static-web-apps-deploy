@@ -101,7 +101,7 @@ jobs:
       - uses: ./
         name: Check Build
         with:
-          action: build
+          action: upload
           app_location: .
           output_location: ./test/public
           app_build_command: npm run build
