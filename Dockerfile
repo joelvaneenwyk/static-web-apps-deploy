@@ -54,10 +54,13 @@ ENV FNM_PATH="$HOME/.local/share/fnm"
 ENV PATH="${FNM_PATH}:${PATH}"
 RUN (touch "$HOME/.bash_profile" "$HOME/.bashrc" &>/dev/null || true) \
     && bash --verbose -c "$(curl -o- https://fnm.vercel.app/install)" \
-    && (echo 'export PATH="$PATH":~/.fnm:~/.local/share/fnm' | tee -a "$HOME/.bash_profile")
+    && (echo 'export PATH="$PATH":/root/.fnm:"$FNM_PATH"' | tee -a "$HOME/.bash_profile") \
+    && (echo 'eval "$(fnm env)"' | tee -a "$HOME/.bash_profile")
 RUN fnm install --lts
+RUN npm install -g npm@latest
 
-COPY --chmod=a+x ./src/entrypoint.sh /admin/entrypoint.sh
+COPY --chmod=a+x "./src/entrypoint.sh" "/admin/entrypoint.sh"
+RUN echo 'export PATH="/bin/staticsites/:/admin:/workspace:/root/build${PATH+:$PATH}"' >> "$HOME/.bash_profile"
 ENTRYPOINT ["/admin/entrypoint.sh"]
 SHELL [ "bash", "--login", "-c" ]
 CMD [ ]
