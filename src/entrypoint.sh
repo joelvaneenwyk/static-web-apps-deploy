@@ -45,6 +45,12 @@
 #
 
 function run_command() {
+  set -ea -o pipefail
+
+  if [ -n "${DEBUG:-}" ]; then
+    set -x
+  fi
+
   echo "##[cmd] $(realpath "$0" || readlink -f "$0" || $0) $*"
 
   local SUPPORTED_COMMANDS=(run upload close help version)
@@ -110,14 +116,17 @@ function run_command() {
     fi
   fi
 
-  echo "##[group] ${OUTPUT_ARGS[*]}"
+  echo "##[group] Environment Stats"
   echo "cwd: $(pwd)"
   echo "npm: $(command -v npm 2>/dev/null)"
   echo "node: $(command -v node 2>/dev/null)"
   echo "hugo: $(command -v hugo 2>/dev/null)"
-  echo "##[cmd] ${OUTPUT_ARGS[*]}"
+  echo "fnm: $(command -v fnm 2>/dev/null)"
+  echo "##[endgroup]"
 
   local result=0
+  echo "##[group] ${OUTPUT_ARGS[*]}"
+  echo "##[cmd] ${OUTPUT_ARGS[*]}"
   if [[ $ARG_SHELL_PASSTHROUGH == 0 ]] && [ ! -f "${SWA_APP_PATH}" ]; then
     echo "[error] Skipped command due to missing '${SWA_APP_NAME}' executable."
     result=80
@@ -129,8 +138,6 @@ function run_command() {
   return $result
 }
 
-set -eax -o pipefail
-
 export HUGO_VERSION="${HUGO_VERSION:-0.127.0}"
 
 if _fnm_env=$(fnm env 2>/dev/null); then
@@ -138,9 +145,9 @@ if _fnm_env=$(fnm env 2>/dev/null); then
 fi
 
 if run_command "$@"; then
-  echo "[INFO] Successfully completed 'static-web-apps-deploy' step."
+  echo "[INFO] Successfully completed 'static-web-apps-deploy' process."
 else
   result=$?
-  echo "[ERROR] Failed to static-web-apps-deploy' step. Error code: ${result}"
+  echo "[ERROR] Failed to complete 'static-web-apps-deploy' process. Error code: ${result}"
   exit ${result}
 fi

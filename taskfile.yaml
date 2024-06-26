@@ -216,7 +216,7 @@ tasks:
     interactive: true
     cmds:
       - task: docker
-        vars: { CLI_ARGS: 'bash --login {{ .CLI_ARGS }}', INTERACTIVE: true }
+        vars: { CLI_ARGS: 'bash --login -c "{{ .CLI_ARGS }}"', INTERACTIVE: true }
 
   version:
     cmds:
