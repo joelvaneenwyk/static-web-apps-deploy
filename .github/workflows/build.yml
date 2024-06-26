@@ -23,7 +23,7 @@ jobs:
     outputs:
       image_name: ${{ steps.get-image-name.outputs.image_name }}
 
-    name: Build Docker Image
+    name: Docker Build
     steps:
       - name: Login Container Registry
         uses: docker/login-action@v3
@@ -79,13 +79,14 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
           logout: false
 
-      - name: Test 'StaticSitesClient version'
+      - name: "Test: `StaticSitesClient version`"
         run: >-
           docker run --rm "${{needs.build-and-push-image.outputs.image_name}}" version
 
   test-local-github-action:
+    needs: build-and-push-image
     runs-on: ubuntu-latest
-    name: Test 'Static-Web-Apps-Deploy' Action
+    name: Test Custom Action
     steps:
       - uses: actions/checkout@v4
       - uses: ./
@@ -97,12 +98,12 @@ jobs:
           repo_token: ${{ github.token }}
           skip_deploy_on_missing_secrets: true
 
-  build:
-    needs: test-local-github-action
+  build-local-test-site:
+    needs: build-and-push-image
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest]
+        os: [ubuntu-latest, macos-latest]
 
     runs-on: '${{ matrix.os }}'
     name: 'Build Local Action'
@@ -117,6 +118,7 @@ jobs:
           node-version: latest
 
       - name: Install Homebrew
+        if: matrix.os != 'windows-latest'
         run: |
           /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
           echo "/home/linuxbrew/.linuxbrew/bin" >> $GITHUB_PATH
@@ -125,11 +127,13 @@ jobs:
           NONINTERACTIVE: 1
 
       - name: Setup Hugo
+        if: matrix.os != 'windows-latest'
         run: |
           brew install hugo
           hugo version
 
       - name: Setup Embedded Dart Sass
+        if: matrix.os != 'windows-latest'
         run: |
           brew install sass/sass/sass
           sass --embedded --version
