@@ -244,6 +244,7 @@ tasks:
           docker run
           --rm {{ .INTERACTIVE }}
           --volume "{{ .TASKFILE_DIR }}":"{{ .DOCKER_APP_LOCATION }}"
+          --volume "{{ .TASKFILE_DIR }}/.git/":"{{ .DOCKER_APP_LOCATION }}/.git/":ro
           --volume "{{ .TASKFILE_DIR }}/src/":"/admin/"
           --restart=no
           --log-driver local

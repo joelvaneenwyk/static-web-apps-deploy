@@ -159,6 +159,7 @@ runs:
         docker run
         --rm
         -v "$WORKSPACE_LOCAL_PATH":"$WORKSPACE_DOCKER_PATH"
+        -v "$WORKSPACE_LOCAL_PATH/.git":"$WORKSPACE_DOCKER_PATH/.git":ro
         --workdir "$WORKSPACE_DOCKER_PATH"
         "${{ steps.get-image-name.outputs.image_name }}"
         $CLI_ARGS

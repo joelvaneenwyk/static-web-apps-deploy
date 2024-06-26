@@ -89,12 +89,21 @@ jobs:
     name: Test Custom Action
     steps:
       - uses: actions/checkout@v4
+
       - uses: ./
-        name: Test
+        name: "Check Version"
         with:
           action: version
-          app_location: ./test
+          repo_token: ${{ github.token }}
+          skip_deploy_on_missing_secrets: true
+
+      - uses: ./
+        name: "Check Build"
+        with:
+          action: build
+          app_location: .
           output_location: ./test/public
+          app_build_command: npm run build
           repo_token: ${{ github.token }}
           skip_deploy_on_missing_secrets: true
 
