@@ -139,14 +139,14 @@ runs:
       id: get-image-name
       shell: bash
       run: |
-          imageName=${{ fromJSON(steps.docker-push.outputs.metadata)['image.name'] }}
-          echo "image_name="${imageName}"" >> $GITHUB_OUTPUT
+        imageName=${{ fromJSON(steps.docker-push.outputs.metadata)['image.name'] }}
+        echo "image_name="${imageName}"" >> $GITHUB_OUTPUT
 
     - name: Run
       shell: bash
       env:
-        WORKSPACE_LOCAL_PATH: "${{ steps.globals.outputs.TA_WORKSPACE_PATH }}"
-        WORKSPACE_DOCKER_PATH: "${{ steps.globals.outputs.TA_WORKSPACE_PATH }}"
+        WORKSPACE_LOCAL_PATH: '${{ steps.globals.outputs.TA_WORKSPACE_PATH }}'
+        WORKSPACE_DOCKER_PATH: '${{ steps.globals.outputs.TA_WORKSPACE_PATH }}'
         CLI_ARGS: >-
           ${{ steps.globals.outputs.TA_CLI_INPUT_ACTION }}
           ${{ steps.globals.outputs.TA_CLI_APP_LOCATION }}

@@ -114,6 +114,7 @@ tasks:
       - cmd: npm run build
 
   format:
+    desc: Automatically format all files with 'Prettier' command.
     deps: [build]
     cmds:
       - cmd: npm run format
@@ -144,6 +145,7 @@ tasks:
       - cmd: gh extension install nektos/gh-act
 
   act:
+    desc: Run GitHub Actions locally.
     deps: [install-gh-act]
     env:
       GIT_TERMINAL_PROMPT: 0
@@ -168,6 +170,7 @@ tasks:
         vars: { ARGS: 'version' }
 
   dotenv-login:
+    internal: true
     status:
       - 'test -f "{{ .TASKFILE_DIR }}/.env.me"'
     sources:
@@ -178,6 +181,7 @@ tasks:
       - cmd: npx --yes dotenv-vault@latest login --yes
 
   dotenv-push:
+    internal: true
     deps: [dotenv-login]
     preconditions:
       - 'test -f "{{ .TASKFILE_DIR }}/.env"'
@@ -186,19 +190,22 @@ tasks:
     cmds:
       - cmd: npx --yes dotenv-vault@latest push --yes
 
+  pre-commit:
+    desc: Run formatter and add files to 'git' automatically.
+    deps: [format]
+    cmds:
+      - cmd: git add .
+
   bash:
+    desc: Start an interactive shell session in Static Web Apps Docker container.
     aliases: [sh]
     interactive: true
     cmds:
       - task: docker-run
         vars: { CLI_ARGS: 'bash --login {{ .CLI_ARGS }}', INTERACTIVE: true }
 
-  pre-commit:
-    deps: [format]
-    cmds:
-      - cmd: git add .
-
   docker-buildx:
+    internal: true
     deps: [init]
     aliases:
       - db
@@ -225,6 +232,7 @@ tasks:
           >"{{ fromSlash .DOCKER_BUILD_LOG_PATH }}"
 
   docker-run:
+    desc: Run the Static Web Apps Docker container.
     deps: [docker-buildx]
     aliases: [r, run]
     vars:
