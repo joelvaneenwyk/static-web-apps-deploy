@@ -85,13 +85,13 @@ jobs:
 
   test-local-github-action:
     runs-on: ubuntu-latest
-    name: Test GitHub Action
+    name: Test 'Static-Web-Apps-Deploy' Action
     steps:
       - uses: actions/checkout@v4
       - uses: ./
         name: Test
         with:
-          action: run
+          action: version
           app_location: ./test
           output_location: ./test/public
           repo_token: ${{ github.token }}
