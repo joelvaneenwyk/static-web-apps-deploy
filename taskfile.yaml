@@ -191,7 +191,7 @@ tasks:
     interactive: true
     cmds:
       - task: docker-run
-        vars: { ARGS: 'bash --login {{ .CLI_ARGS }}' }
+        vars: { CLI_ARGS: 'bash --login {{ .CLI_ARGS }}', INTERACTIVE: true }
 
   pre-commit:
     deps: [format]
@@ -208,9 +208,11 @@ tasks:
       DOCKER_BUILD_LOG_PATH: '{{ .BUILD_DIR }}/docker-build.log'
     env:
       DOCKER_BUILDKIT: 1
+    status:
+      - test -n "$(docker images -q "{{ .DOCKER_IMAGE_TAG }}")"
     sources:
       - '{{ .DOCKERFILE_PATH }}'
-      - '{{ .TASKFILE_DIR }}/entrypoint.sh'
+      - '{{ .TASKFILE_DIR }}/src/entrypoint.sh'
     generates:
       - '{{ .DOCKER_BUILD_LOG_PATH }}'
     cmds:
@@ -228,20 +230,21 @@ tasks:
     vars:
       SKIP_DEPLOY_ON_MISSING_SECRETS: true
       SKIP_APP_BUILD: true
-      APP_LOCATION: '{{ .TASKFILE_DIR }}/test/public'
       DOCKER_APP_LOCATION: '/root/build'
       DOCKER_IMAGE: '{{ .DOCKER_IMAGE_TAG }}'
-      ARGS: >-
+      INTERACTIVE: '{{ if .INTERACTIVE }}-it{{ end }}'
+      ARGS_DEFAULT: >-
         upload
         --skipAppBuild
         --app "{{ .DOCKER_APP_LOCATION }}"
         --apiToken "{{ .AZURE_STATIC_WEB_APPS_API_TOKEN }}"
-      ARGS2: '{{ coalesce .ARGS .CLI_ARGS "" }}'
+      ARGS: '{{ coalesce .CLI_ARGS .ARGS_DEFAULT "" }}'
     cmds:
       - cmd: >-
           docker run
-          --rm
-          --volume "{{ fromSlash .APP_LOCATION }}":"{{ .DOCKER_APP_LOCATION }}"
+          --rm {{ .INTERACTIVE }}
+          --volume "{{ .TASKFILE_DIR }}":"{{ .DOCKER_APP_LOCATION }}"
+          --volume "{{ .TASKFILE_DIR }}/src/":"/admin/"
           --restart=no
           --log-driver local
           --log-opt max-size=10m

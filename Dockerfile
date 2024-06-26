@@ -57,7 +57,7 @@ RUN (touch "$HOME/.bash_profile" "$HOME/.bashrc" &>/dev/null || true) \
     && (echo 'export PATH="$PATH":~/.fnm:~/.local/share/fnm' | tee -a "$HOME/.bash_profile")
 RUN fnm install --lts
 
-COPY --chmod=a+x ./entrypoint.sh /entrypoint.sh
-ENTRYPOINT ["/entrypoint.sh"]
+COPY --chmod=a+x ./src/entrypoint.sh /admin/entrypoint.sh
+ENTRYPOINT ["/admin/entrypoint.sh"]
 SHELL [ "bash", "--login", "-c" ]
 CMD [ ]

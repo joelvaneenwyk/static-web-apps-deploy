@@ -48,29 +48,22 @@ function run_command() {
   echo "##[cmd] $(realpath "$0" || readlink -f "$0" || $0) $*"
 
   local SUPPORTED_COMMANDS=(run upload close help version)
-
-  local SWA_APP=StaticSitesClient
-  local SWA_DIR="${SWA_DIR:-./.bin/}"
-  if [ ! -e "${SWA_DIR}/${SWA_APP}" ]; then
-    SWA_DIR="/bin/staticsites"
-  fi
-  local SWA="${SWA_DIR}/${SWA_APP}"
-
-  local ARG_PASSTHROUGH=0
+  local ARG_SHELL_PASSTHROUGH=0
   local ARG_FOUND_APP=0
   local INPUT_ARGS=("$@")
   local OUTPUT_ARGS=()
   local OUTPUT_ACTION=""
+  local SWA_APP_NAME=StaticSitesClient
+
   for argument in "${INPUT_ARGS[@]}"; do
     if [ ${#OUTPUT_ARGS[@]} -eq 0 ] && [[ X${argument:-} == Xsh* ]] || [[ X${argument:-} == Xbash* ]]; then
-      echo "No action specified, passing all arguments to shell directly."
-      ARG_PASSTHROUGH=1
+      ARG_SHELL_PASSTHROUGH=1
     fi
 
     if [ -n "${argument}" ]; then
       OUTPUT_ARGS+=("${argument}")
 
-      if [[ "X${SWA_APP}" == *X${argument}* ]]; then
+      if [[ X${argument} == *X${SWA_APP_NAME}* ]]; then
         ARG_FOUND_APP=1
       fi
 
@@ -80,27 +73,36 @@ function run_command() {
     fi
   done
 
-  if [[ $ARG_FOUND_APP == 0 ]]; then
-    OUTPUT_ARGS=("${SWA}" "${OUTPUT_ARGS[@]}")
-  else
-    printf "[INFO] Found '%s' executable. Skipped prepending executable to argument list.\n" "${SWA}"
+  local SWA_DIR="${SWA_DIR:-./.bin/}"
+  if [ ! -e "${SWA_DIR}/${SWA_APP_NAME}" ]; then
+    SWA_DIR="/bin/staticsites"
   fi
+  PATH="${SWA_DIR}:${PATH}"
+  export PATH
 
-  if [[ -z "$OUTPUT_ACTION" ]] && [[ $ARG_PASSTHROUGH == 0 ]]; then
+  if [[ -z "$OUTPUT_ACTION" ]] && [[ $ARG_SHELL_PASSTHROUGH == 0 ]]; then
     OUTPUT_ACTION="run"
     OUTPUT_ARGS+=("${OUTPUT_ACTION}")
     echo "[WARNING] No action specified so appended default 'run' action."
   fi
 
-  if [[ ! " ${OUTPUT_ARGS[*]} " =~ [[:space:]]--verbose[[:space:]] ]] && [[ "$ARG_PASSTHROUGH" == "0" ]] && [[ ! "$OUTPUT_ACTION" = "version" ]]; then
+  if [[ ! " ${OUTPUT_ARGS[*]} " =~ [[:space:]]--verbose[[:space:]] ]] && [[ $ARG_SHELL_PASSTHROUGH == 0 ]] && [[ ! "$OUTPUT_ACTION" = "version" ]]; then
     OUTPUT_ARGS+=(--verbose)
     echo "[INFO] Enabled verbose logging."
   fi
 
-  cd "${SWA_DIR}" &>/dev/null || true
+  local SWA_APP_PATH="${SWA_DIR}/${SWA_APP_NAME}"
+  if [[ $ARG_SHELL_PASSTHROUGH == 1 ]]; then
+    echo "No recognized action specified, so passed all arguments to shell directly: '${OUTPUT_ARGS[*]}'"
+  elif [[ $ARG_FOUND_APP == 1 ]]; then
+    printf "[INFO] Found '%s' executable. Skipped prepending executable to argument list.\n" "${SWA_APP_PATH}"
+  else
+    OUTPUT_ARGS=("${SWA_APP_PATH}" "${OUTPUT_ARGS[@]}")
+    printf "[INFO] Prepended '%s' executable to command list.\n" "${SWA_APP_PATH}"
+  fi
 
-  if [[ "$ARG_PASSTHROUGH" == "0" ]] && [ ! -f "${SWA}" ]; then
-    echo "[error] Skipped command '${OUTPUT_ARGS[*]}' due to missing '${SWA_APP}' executable."
+  if [[ $ARG_SHELL_PASSTHROUGH == 0 ]] && [ ! -f "${SWA_APP_PATH}" ]; then
+    echo "[error] Skipped command '${OUTPUT_ARGS[*]}' due to missing '${SWA_APP_NAME}' executable."
     return 80
   fi
 
@@ -108,16 +110,14 @@ function run_command() {
   "${OUTPUT_ARGS[@]}"
 }
 
-function main() {
-  set -ea -o pipefail
-  export HUGO_VERSION="${HUGO_VERSION:-0.127.0}"
-  if run_command "$@"; then
-    echo "[INFO] Successfully completed 'static-web-apps-deploy' step."
-  else
-    result=$?
-    echo "[ERROR] Failed to static-web-apps-deploy' step. Error code: ${result}"
-    exit ${result}
-  fi
-}
+set -eax -o pipefail
 
-main "$@"
+export HUGO_VERSION="${HUGO_VERSION:-0.127.0}"
+
+if run_command "$@"; then
+  echo "[INFO] Successfully completed 'static-web-apps-deploy' step."
+else
+  result=$?
+  echo "[ERROR] Failed to static-web-apps-deploy' step. Error code: ${result}"
+  exit ${result}
+fi

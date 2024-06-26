@@ -14,6 +14,7 @@ test/themes/nightfall/public/
 test/themes/nightfall/resources/_gen/
 test/themes/nightfall/netlify.toml
 
+static-web-apps-deploy*/
 static-web-apps-deploy*.tgz
 
 sass_embedded/

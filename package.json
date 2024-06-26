@@ -14,8 +14,7 @@
     "format": "prettier --write ."
   },
   "files": [
-    "entrypoint.sh",
-    "compose.yml",
+    "src/entrypoint.sh",
     "Dockerfile",
     "action.yml",
     "LICENSE",
