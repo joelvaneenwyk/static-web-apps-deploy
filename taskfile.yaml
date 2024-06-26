@@ -293,7 +293,8 @@ tasks:
       SKIP_APP_BUILD: true
       DOCKER_APP_LOCATION: '/root/build'
       DOCKER_IMAGE: '{{ .DOCKER_IMAGE_TAG }}'
-      INTERACTIVE: '{{ if .INTERACTIVE }}-it{{ end }}'
+      INTERACTIVE: '{{coalesce .INTERACTIVE .CLI_ARGS}}'
+      ARG_INTERACTIVE: '{{ if .INTERACTIVE }}-it{{ end }}'
       ARGS_DEFAULT: >-
         upload
         --skipAppBuild
@@ -303,9 +304,8 @@ tasks:
     cmds:
       - cmd: >-
           docker run
-          --rm {{ .INTERACTIVE }}
+          --rm {{ .ARG_INTERACTIVE }}
           --volume "{{ .TASKFILE_DIR }}":"{{ .DOCKER_APP_LOCATION }}"
-          --volume "{{ .TASKFILE_DIR }}/.git/":"{{ .DOCKER_APP_LOCATION }}/.git/":ro
           --volume "{{ .TASKFILE_DIR }}/src/":"/admin/"
           --restart=no
           --log-driver local
