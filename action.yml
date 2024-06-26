@@ -123,13 +123,6 @@ runs:
         }
         write_env | tee -a "${GITHUB_OUTPUT}"
 
-    - uses: actions/checkout@v4
-      id: action-checkout
-      with:
-        token: ${{ steps.globals.outputs.TA_TOKEN }}
-        repository: ${{ steps.globals.outputs.TA_REPOSITORY }}
-        path: ${{ steps.globals.outputs.TA_REL_PATH }}
-
     - name: Setup Docker Buildx
       uses: docker/setup-buildx-action@v3
 
@@ -151,8 +144,8 @@ runs:
       id: docker-push
       uses: docker/build-push-action@v6
       with:
-        context: ${{ steps.globals.outputs.TA_PATH }}
-        file: ${{ steps.globals.outputs.TA_PATH }}/Dockerfile
+        context: ${{ github.action_path }}
+        file: ${{ github.action_path }}/Dockerfile
         push: false
         load: true
         tags: ${{ steps.meta.outputs.tags }}
