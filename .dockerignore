@@ -8,3 +8,8 @@ node_modules/
 .build/
 .github/
 .git/
+
+.env*
+.flaskenv*
+!.env.project
+!.env.vault
