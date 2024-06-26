@@ -90,8 +90,8 @@ runs:
         RAW_INPUTS_DATA_API_LOCATION: ${{ inputs.app_artifact_location }}
         RAW_INPUTS_ACTION: ${{ inputs.action || 'deploy' }}
         RAW_INPUTS_AZURE_STATIC_WEB_APPS_API_TOKEN: ${{ inputs.azure_static_web_apps_api_token || 'no_token_provided' }}
-        RAW_INPUTS_SKIP_DEPLOY_ON_MISSING_SECRETS: ${{ inputs.skip_deploy_on_missing_secrets == 'true' && '--skipDeployOnMissingSecrets' }}
-        RAW_INPUTS_SKIP_APP_BUILD: ${{ inputs.skip_app_build == 'true' && '--skipAppBuild' }}
+        RAW_INPUTS_SKIP_DEPLOY_ON_MISSING_SECRETS: ${{ inputs.skip_deploy_on_missing_secrets == 'true' && '--skipDeployOnMissingSecrets'|| null }}
+        RAW_INPUTS_SKIP_APP_BUILD: ${{ inputs.skip_app_build == 'true' && '--skipAppBuild' || null }}
       run: |
         function write_env() {
           set -ea -o pipefail
@@ -185,13 +185,13 @@ runs:
         WORKSPACE_DOCKER_PATH: '${{ steps.globals.outputs.TA_WORKSPACE_PATH }}'
         DOCKER_IMAGE: '${{ steps.get-image-name.outputs.image_name }}'
         CLI_ARGS: >-
-          ${{ steps.globals.outputs.TA_CLI_INPUT_ACTION }}
+          ${{ steps.globals.outputs.TA_CLI_AZURE_STATIC_WEB_APPS_API_TOKEN }}
           ${{ steps.globals.outputs.TA_CLI_APP_LOCATION }}
           ${{ steps.globals.outputs.TA_CLI_DATA_APP_ARTIFACT_LOCATION }}
           ${{ steps.globals.outputs.TA_CLI_DATA_API_LOCATION }}
-          ${{ steps.globals.outputs.TA_CLI_AZURE_STATIC_WEB_APPS_API_TOKEN }}
           ${{ steps.globals.outputs.TA_CLI_SKIP_DEPLOY_ON_MISSING_SECRETS }}
           ${{ steps.globals.outputs.TA_CLI_SKIP_APP_BUILD }}
+          ${{ steps.globals.outputs.TA_CLI_INPUT_ACTION }}
       run: >-
         docker run --rm
         -v "$WORKSPACE_LOCAL_PATH":"$WORKSPACE_DOCKER_PATH"
