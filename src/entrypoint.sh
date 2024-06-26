@@ -101,13 +101,22 @@ function run_command() {
     printf "[INFO] Prepended '%s' executable to command list.\n" "${SWA_APP_PATH}"
   fi
 
-  if [[ $ARG_SHELL_PASSTHROUGH == 0 ]] && [ ! -f "${SWA_APP_PATH}" ]; then
-    echo "[error] Skipped command '${OUTPUT_ARGS[*]}' due to missing '${SWA_APP_NAME}' executable."
-    return 80
-  fi
-
+  echo "##[group] ${OUTPUT_ARGS[*]}"
+  echo "cwd: $(pwd)"
+  echo "npm: $(command -v npm 2>/dev/null)"
+  echo "node: $(command -v node 2>/dev/null)"
+  echo "hugo: $(command -v hugo 2>/dev/null)"
   echo "##[cmd] ${OUTPUT_ARGS[*]}"
-  "${OUTPUT_ARGS[@]}"
+
+  local result=0
+  if [[ $ARG_SHELL_PASSTHROUGH == 0 ]] && [ ! -f "${SWA_APP_PATH}" ]; then
+    echo "[error] Skipped command due to missing '${SWA_APP_NAME}' executable."
+    result=80
+  else "${OUTPUT_ARGS[@]}"
+    result=$?
+  fi
+  echo "##[endgroup]"
+  return $result
 }
 
 set -eax -o pipefail
