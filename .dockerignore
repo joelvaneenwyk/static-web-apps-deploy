@@ -1,0 +1,10 @@
+.env/
+.env
+.env.*
+
+node_modules/
+.task/
+.vscode/
+.build/
+.github/
+.git/
