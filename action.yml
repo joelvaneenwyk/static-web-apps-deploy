@@ -89,8 +89,8 @@ runs:
         RAW_INPUTS_APP_ARTIFACT_LOCATION: ${{ inputs.app_artifact_location }}
         RAW_INPUTS_DATA_API_LOCATION: ${{ inputs.app_artifact_location }}
         RAW_INPUTS_ACTION: ${{ inputs.action || 'deploy' }}
-        RAW_INPUTS_AZURE_STATIC_WEB_APPS_API_TOKEN: ${{ inputs.azure_static_web_apps_api_token || 'no_token_provided' }}
-        RAW_INPUTS_SKIP_DEPLOY_ON_MISSING_SECRETS: ${{ inputs.skip_deploy_on_missing_secrets == 'true' && '--skipDeployOnMissingSecrets'|| null }}
+        RAW_INPUTS_AZURE_STATIC_WEB_APPS_API_TOKEN: ${{ inputs.azure_static_web_apps_api_token || null }}
+        RAW_INPUTS_SKIP_DEPLOY_ON_MISSING_SECRETS: ${{ inputs.skip_deploy_on_missing_secrets == 'true' && '--skipDeployOnMissingSecrets' || null }}
         RAW_INPUTS_SKIP_APP_BUILD: ${{ inputs.skip_app_build == 'true' && '--skipAppBuild' || null }}
       run: |
         function write_env() {
@@ -131,12 +131,14 @@ runs:
           TA_DATA_API_LOCATION="${TA_DATA_API_LOCATION%/}"
 
           echo "TA_CLI_INPUT_ACTION=${RAW_INPUTS_ACTION:-deploy}"
-          echo "TA_CLI_APP_LOCATION=--app $TA_WORKSPACE_DOCKER_PATH"
-          echo "TA_CLI_DATA_APP_ARTIFACT_LOCATION=--appArtifactLocation $TA_DATA_APP_ARTIFACT_LOCATION"
-          echo "TA_CLI_DATA_API_LOCATION=--api $TA_DATA_API_LOCATION"
-          echo "TA_CLI_AZURE_STATIC_WEB_APPS_API_TOKEN=--apiToken ${RAW_INPUTS_AZURE_STATIC_WEB_APPS_API_TOKEN:-invalid_default_token}"
+          echo "TA_CLI_APP_LOCATION=--app \"$TA_WORKSPACE_DOCKER_PATH\""
+          echo "TA_CLI_DATA_APP_ARTIFACT_LOCATION=--appArtifactLocation \"$TA_DATA_APP_ARTIFACT_LOCATION\""
+          echo "TA_CLI_DATA_API_LOCATION=--api \"$TA_DATA_API_LOCATION\""
           echo "TA_CLI_SKIP_DEPLOY_ON_MISSING_SECRETS=$RAW_INPUTS_SKIP_DEPLOY_ON_MISSING_SECRETS"
           echo "TA_CLI_SKIP_APP_BUILD=$RAW_INPUTS_SKIP_APP_BUILD"
+
+          [[ -n "${RAW_INPUTS_AZURE_STATIC_WEB_APPS_API_TOKEN:-}" ]] \
+            && echo "TA_CLI_AZURE_STATIC_WEB_APPS_API_TOKEN=--apiToken \"$RAW_INPUTS_AZURE_STATIC_WEB_APPS_API_TOKEN\""
         }
         write_env | tee -a "${GITHUB_OUTPUT:-./.env.action_output}"
 
