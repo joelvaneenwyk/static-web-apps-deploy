@@ -214,9 +214,11 @@ tasks:
     desc: Start an interactive shell session in Static Web Apps Docker container.
     aliases: [sh]
     interactive: true
+    vars:
+      CLI_ARGS: '{{ if .CLI_ARGS }}bash --login -c "{{ .CLI_ARGS }}"{{ else }}bash --login{{ end }}'
     cmds:
       - task: docker
-        vars: { CLI_ARGS: 'bash --login -c "{{ .CLI_ARGS }}"', INTERACTIVE: true }
+        vars: { CLI_ARGS: '{{ .CLI_ARGS }}', INTERACTIVE: true }
 
   version:
     cmds:

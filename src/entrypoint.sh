@@ -79,6 +79,14 @@ function run_command() {
     fi
   done
 
+  if [ "$(pwd)" = "/" ]; then
+    cd /root/build ||
+      cd "${SWA_DIR}" ||
+      cd /workspace ||
+      cd /github/workspace ||
+      cd /bin/staticsites
+  fi
+
   local SWA_DIR="${SWA_DIR:-./.bin/}"
   if [ ! -e "${SWA_DIR}/${SWA_APP_NAME}" ]; then
     SWA_DIR="/bin/staticsites"
@@ -125,16 +133,29 @@ function run_command() {
   echo "##[endgroup]"
 
   local result=0
-  echo "##[group] ${OUTPUT_ARGS[*]}"
   echo "##[cmd] ${OUTPUT_ARGS[*]}"
   if [[ $ARG_SHELL_PASSTHROUGH == 0 ]] && [ ! -f "${SWA_APP_PATH}" ]; then
     echo "[error] Skipped command due to missing '${SWA_APP_NAME}' executable."
     result=80
   else
-    "${OUTPUT_ARGS[@]}"
-    result=$?
+    echo "{{BEGIN}} Command Output"
+    echo "---------------------------------------"
+    local _build_dir="${current_dir}/.build"
+    mkdir -p ./.build || true
+    if "${OUTPUT_ARGS[@]}" | tee -a "./.build/static-sites-$(date +%s).log"; then
+      :
+    else
+      result=$?
+    fi
+    echo "---------------------------------------"
+    echo "{{END}} Command Output"
+
+    if [ $result -eq 0 ]; then
+      echo "[INFO] Successfully completed 'static-web-apps-deploy' process."
+    else
+      echo "[ERROR] Failed to complete 'static-web-apps-deploy' process. Error code: ${result}"
+    fi
   fi
-  echo "##[endgroup]"
   return $result
 }
 
@@ -144,10 +165,4 @@ if _fnm_env=$(fnm env 2>/dev/null); then
   eval "$_fnm_env"
 fi
 
-if run_command "$@"; then
-  echo "[INFO] Successfully completed 'static-web-apps-deploy' process."
-else
-  result=$?
-  echo "[ERROR] Failed to complete 'static-web-apps-deploy' process. Error code: ${result}"
-  exit ${result}
-fi
+run_command "$@"
