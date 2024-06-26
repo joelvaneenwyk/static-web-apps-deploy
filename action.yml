@@ -2,7 +2,7 @@
 
 name: 'Azure Static Web Apps Deploy'
 description: 'Deploys an application to Azure Static Web Apps'
-
+author: 'Microsoft'
 branding:
   icon: 'upload-cloud'
   color: 'blue'
@@ -17,98 +17,161 @@ inputs:
     required: true
     default: './'
   azure_static_web_apps_api_token:
-    description: 'Required token'
+    description: 'Deploy token for Azure Static Web App'
     required: true
+  repo_token:
+    description: >
+      Token for interacting with the Github repository which is currently used primarily
+      for commenting on Pull Requests.
+
+      Personal access token (PAT) used to fetch the repository. The PAT is configured
+      with the local git config, which enables your scripts to run authenticated git
+      commands. The post-job step removes the PAT.
+
+
+      We recommend using a service account with the least permissions necessary.
+      Also when generating a new PAT, select the least scopes necessary.
+
+      [Learn more about creating and using encrypted secrets](https://help.github.com/en/actions/automating-your-workflow-with-github-actions/creating-and-using-encrypted-secrets)
+    default: ${{ github.token }}
   skip_deploy_on_missing_secrets:
     description: 'Skip deployment if secrets are missing'
-    required: false
     default: 'true'
   api_build_command:
     description: 'Custom command for Oryx to run when building Azure Functions source code'
-    required: false
   api_location:
     description: 'Directory location of the Azure Functions source code'
-    required: false
-    default: ''
   data_api_location:
     description: 'Directory location of the Data API configuration files'
-    required: false
   app_artifact_location:
     description: 'Identical in use to output_location'
-    required: false
   output_location:
     description: 'Directory location of the compiled application code after building'
-    required: false
   app_build_command:
     description: 'Custom command for Oryx to run when building application source code'
-    required: false
-  repo_token:
-    description: 'Token for interacting with the Github repository. Currently used only for commenting on Pull Requests.'
-    required: false
   routes_location:
     description: 'Directory location where the routes.json file can be found in the source code'
-    required: false
   skip_app_build:
     description: 'Skips the build step for the application source code if set to true.'
-    required: false
   config_file_location:
     description: 'Directory location where the staticwebapp.config.json file can be found in the source code'
-    required: false
   skip_api_build:
     description: 'Skips the build step for the Azure Functions source code if set to true.'
-    required: false
   production_branch:
     description: 'When specified, deployments from other branches will be considered preview environments.'
-    required: false
   deployment_environment:
     description: 'Name of the Azure Static Web Apps environment to deploy to.'
-    required: false
   is_static_export:
     description: 'Indicates you are using `next export` to generate a static site if set to true.'
-    required: false
 
 outputs:
   static_web_app_url:
     description: 'Url of the application'
     value: ''
 
+  image_name:
+    description: 'Name of the Docker image used to run the action'
+    value: ''
+
 runs:
   using: 'composite'
   steps:
-    - name: Set up Docker buildx
-      uses: docker/setup-buildx-action@v3.0.0
-      env:
-        DOCKER_BUILDKIT: '1'
-      with:
-        buildkitd-flags: --debug
-        cleanup: false
+    - name: Set globals
+      id: globals
+      shell: bash
+      run: |
+        function write_env() {
+          local github_actor='${{ github.actor }}'
+          echo "TA_USERNAME=${github_actor}"
 
-    - name: Build
+          local input_repo_token='${{ inputs.repo_token }}'
+          echo "TA_PASSWORD=${input_repo_token}"
+          echo "TA_TOKEN=${input_repo_token}"
+
+          local github_repository='${{ github.repository }}'
+          local action_repository='${{ github.action_repository }}'
+          local repository="${action_repository:-${github_repository}}"
+          echo "TA_REPOSITORY=${repository}"
+          echo "TA_GHCR_IMAGE=ghcr.io/${repository}"
+
+          local base_path=".git_action_build/static-web-apps-deploy"
+          local workspace='${{ github.workspace }}'
+          echo "TA_REL_PATH=${base_path}"
+          echo "TA_PATH=${workspace}/${base_path}"
+
+          echo 'TA_CLI_INPUT_ACTION="${{ inputs.action }}"'
+
+          local data_api_location='${{ inputs.data_api_location }}'
+          if [ -n "${data_api_location}" ]; then
+            echo "TA_CLI_DATA_API_LOCATION="--app "${data_api_location}"""
+          fi
+
+          local azure_static_web_apps_api_token='${{ inputs.azure_static_web_apps_api_token }}'
+          if [ -n "${azure_static_web_apps_api_token}" ]; then
+            echo "TA_CLI_AZURE_STATIC_WEB_APPS_API_TOKEN="--apiToken "${azure_static_web_apps_api_token}"""
+          fi
+
+          local skip_deploy_on_missing_secrets='${{ inputs.skip_deploy_on_missing_secrets }}'
+          if [ "${skip_deploy_on_missing_secrets}" == "true" ]; then
+            echo 'TA_CLI_SKIP_DEPLOY_ON_MISSING_SECRETS="--skipDeployOnMissingSecrets"'
+          fi
+
+          local skip_app_build='${{ inputs.skip_app_build }}'
+          if [ "${skip_app_build}" == "true" ]; then
+            echo "TA_CLI_SKIP_APP_BUILD=--skipAppBuild"
+          fi
+        }
+        write_env | tee -a "${GITHUB_OUTPUT}"
+
+    - uses: actions/checkout@v4
+      id: action-checkout
+      with:
+        token: ${{ steps.globals.outputs.TA_TOKEN }}
+        repository: ${{ steps.globals.outputs.TA_REPOSITORY }}
+        path: ${{ steps.globals.outputs.TA_REL_PATH }}
+
+    - name: Setup Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Login Container Registry
+      uses: docker/login-action@v3
+      with:
+        registry: ghcr.io
+        username: ${{ steps.globals.outputs.TA_USERNAME }}
+        password: ${{ steps.globals.outputs.TA_PASSWORD }}
+        logout: false
+
+    - name: Extract Image Metadata
+      id: meta
+      uses: docker/metadata-action@v5
+      with:
+        images: ${{ steps.globals.outputs.TA_GHCR_IMAGE }}
+
+    - name: Build Image
+      id: docker-push
       uses: docker/build-push-action@v6
       with:
-        context: .
-        file: Dockerfile
-        tags: static-web-apps-deploy:latest
+        context: ${{ steps.globals.outputs.TA_PATH }}
+        file: ${{ steps.globals.outputs.TA_PATH }}/Dockerfile
+        push: false
         load: true
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
         cache-from: type=gha
         cache-to: type=gha,mode=max
-        push: false
+
+    - name: Get Image Name
+      id: get-image-name
+      shell: bash
+      run: |
+          imageName=${{ fromJSON(steps.docker-push.outputs.metadata)['image.name'] }}
+          echo "image_name="${imageName}"" >> $GITHUB_OUTPUT
 
     - name: Run
-      uses: addnab/docker-run-action@v3
-      env:
-        SKIP_DEPLOY_ON_MISSING_SECRETS: '${{ inputs.skip_deploy_on_missing_secrets }}'
-      with:
-        # docker run --entrypoint "/bin/staticsites/StaticSitesClient"
-        # mcr.microsoft.com/appsvc/staticappsclient:stable
-        image: static-web-apps-deploy:latest
-        # --volume "$(pwd)"/build:/root/build
-        # upload
-        # --skipAppBuild true
-        # --app /root/build
-        # --apiToken "<token>"
-        run: >-
-          ${{ inputs.action }}
-          --skipAppBuild "${{ inputs.skip_app_build }}"
-          --app "${{ inputs.data_api_location }}"
-          --apiToken "${{ inputs.azure_static_web_apps_api_token }}"
+      shell: bash
+      run: >-
+        docker run --rm "${{ steps.get-image-name.outputs.image_name }}"
+        ${{ steps.globals.outputs.TA_CLI_INPUT_ACTION }}
+        ${{ steps.globals.outputs.TA_CLI_SKIP_DEPLOY_ON_MISSING_SECRETS }}
+        ${{ steps.globals.outputs.TA_CLI_DATA_API_LOCATION }}
+        ${{ steps.globals.outputs.TA_CLI_AZURE_STATIC_WEB_APPS_API_TOKEN }}
