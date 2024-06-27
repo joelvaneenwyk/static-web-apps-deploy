@@ -293,15 +293,22 @@ tasks:
     vars:
       SKIP_DEPLOY_ON_MISSING_SECRETS: true
       SKIP_APP_BUILD: true
-      DOCKER_APP_LOCATION: '/root/build'
       DOCKER_IMAGE: '{{ .DOCKER_IMAGE_TAG }}'
-      INTERACTIVE: '{{coalesce .INTERACTIVE .CLI_ARGS}}'
+      INTERACTIVE: '{{ coalesce .INTERACTIVE .CLI_ARGS }}'
+      APP_LOCATION: '{{ default "" .APP_LOCATION }}'
+      DOCKER_APP_LOCATION: '{{ default "/root/build" .APP_LOCATION }}'
+      DOCKER_APP_LOCATION_HAS_OVERRIDE: '{{if eq .APP_LOCATION ""}}false{{else}}true{{end}}'
+      ARG_ACTION: '{{ default "run" .ACTION }}'
       ARG_INTERACTIVE: '{{ if .INTERACTIVE }}-it{{ end }}'
+      ARG_APP_LOCATION: '{{ if ne .APP_LOCATION "" }}--app "{{ .DOCKER_APP_LOCATION }}"{{ end }}'
+      ARG_WORK_DIR: '{{ if ne .APP_LOCATION "" }}--workdir "{{ .DOCKER_APP_LOCATION }}"{{ end }}'
+      ARG_DEPLOYMENT_ACTION: '{{ if eq .ARG_ACTION "upload" }}--deploymentaction "{{ .ARG_ACTION }}"{{ end }}'
+      ARG_AZURE_API_TOKEN: '{{ if .AZURE_STATIC_WEB_APPS_API_TOKEN }}--apiToken "{{ .AZURE_STATIC_WEB_APPS_API_TOKEN }}"{{ end }}'
       ARGS_DEFAULT: >-
-        upload
-        --skipAppBuild
-        --app "{{ .DOCKER_APP_LOCATION }}"
-        --apiToken "{{ .AZURE_STATIC_WEB_APPS_API_TOKEN }}"
+        {{ .ARG_ACTION }}
+        {{ .ARG_DEPLOYMENT_ACTION }}
+        {{ .ARG_APP_LOCATION }}
+        {{ .ARG_AZURE_API_TOKEN }}
       ARGS: '{{ coalesce .CLI_ARGS .ARGS_DEFAULT "" }}'
     cmds:
       - cmd: >-
@@ -313,8 +320,8 @@ tasks:
           --log-driver local
           --log-opt max-size=10m
           --log-opt max-file=3
-          --workdir "{{ .DOCKER_APP_LOCATION }}"
           --name "{{ .DOCKER_IMAGE_NAME }}"
+          {{ .ARG_WORK_DIR }}
           "{{ .DOCKER_IMAGE }}"
           {{ .ARGS }}
 

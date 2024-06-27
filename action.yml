@@ -130,7 +130,7 @@ runs:
           local TA_DATA_API_LOCATION="$TA_WORKSPACE_DOCKER_PATH/$RAW_INPUTS_DATA_API_LOCATION"
           TA_DATA_API_LOCATION="${TA_DATA_API_LOCATION%/}"
 
-          local RAW_INPUTS_ACTION="${RAW_INPUTS_ACTION:-deploy}"
+          local RAW_INPUTS_ACTION="${RAW_INPUTS_ACTION:-run}"
           echo "TA_CLI_INPUT_ACTION=${RAW_INPUTS_ACTION}"
 
           if [ "$RAW_INPUTS_ACTION" != "version" ]; then
