@@ -106,6 +106,14 @@ function run_command() {
     echo "[WARNING] No action specified so appended default 'run' action."
   fi
 
+  # The argument being lower-case as '--deploymentaction' is intentional
+  [[ "$output_action" == "close" ]] && output_deployment_action="close" || output_deployment_action="upload"
+  if [[ ! " ${output_arguments[*]} " =~ [[:space:]]--deploymentaction[[:space:]] ]]; then
+    output_arguments+=(--deploymentaction "$output_deployment_action")
+    output_arguments+=(--skipDeployOnMissingSecrets)
+    output_arguments+=(--skipAppBuild)
+  fi
+
   if [[ ! " ${output_arguments[*]} " =~ [[:space:]]--verbose[[:space:]] ]] && [[ $arg_use_shell_passthrough == 0 ]] && [[ ! "$output_action" = "version" ]]; then
     output_arguments+=(--verbose)
     echo "[INFO] Enabled verbose logging."
