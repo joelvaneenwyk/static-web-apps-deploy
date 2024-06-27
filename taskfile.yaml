@@ -289,41 +289,57 @@ tasks:
   docker:
     aliases: [d, r, run]
     desc: Run the Static Web Apps Docker container.
-    deps: [docker-build]
+    deps: [docker-build, dotenv-pull]
     vars:
-      SKIP_DEPLOY_ON_MISSING_SECRETS: true
-      SKIP_APP_BUILD: true
+      INPUT_INTERACTIVE: '{{ coalesce .INTERACTIVE .CLI_ARGS }}'
+      INPUT_DATA_API_LOCATION: '{{ default "" .DATA_API_LOCATION }}'
+      INPUT_APP_ARTIFACT_LOCATION: '{{ default "./test/public/" .APP_ARTIFACT_LOCATION }}'
+
       DOCKER_IMAGE: '{{ .DOCKER_IMAGE_TAG }}'
-      INTERACTIVE: '{{ coalesce .INTERACTIVE .CLI_ARGS }}'
-      APP_LOCATION: '{{ default "" .APP_LOCATION }}'
+      DOCKER_IMAGE_NAME: '{{ .DOCKER_IMAGE_NAME }}'
+      DOCKER_CONTAINER_NAME: '{{ coalesce .DOCKER_CONTAINER_NAME .DOCKER_IMAGE_NAME }}'
+      DOCKER_ARG_INTERACTIVE: '{{ if .INPUT_INTERACTIVE }}-it{{ end }}'
       DOCKER_APP_LOCATION: '{{ default "/root/build" .APP_LOCATION }}'
-      DOCKER_APP_LOCATION_HAS_OVERRIDE: '{{if eq .APP_LOCATION ""}}false{{else}}true{{end}}'
-      ARG_ACTION: '{{ default "run" .ACTION }}'
-      ARG_INTERACTIVE: '{{ if .INTERACTIVE }}-it{{ end }}'
-      ARG_APP_LOCATION: '{{ if ne .APP_LOCATION "" }}--app "{{ .DOCKER_APP_LOCATION }}"{{ end }}'
-      ARG_WORK_DIR: '{{ if ne .APP_LOCATION "" }}--workdir "{{ .DOCKER_APP_LOCATION }}"{{ end }}'
-      ARG_DEPLOYMENT_ACTION: '{{ if eq .ARG_ACTION "upload" }}--deploymentaction "{{ .ARG_ACTION }}"{{ end }}'
-      ARG_AZURE_API_TOKEN: '{{ if .AZURE_STATIC_WEB_APPS_API_TOKEN }}--apiToken "{{ .AZURE_STATIC_WEB_APPS_API_TOKEN }}"{{ end }}'
-      ARGS_DEFAULT: >-
-        {{ .ARG_ACTION }}
-        {{ .ARG_DEPLOYMENT_ACTION }}
-        {{ .ARG_APP_LOCATION }}
-        {{ .ARG_AZURE_API_TOKEN }}
-      ARGS: '{{ coalesce .CLI_ARGS .ARGS_DEFAULT "" }}'
+
+      SKIP_DEPLOY_ON_MISSING_SECRETS: '{{ default true .SKIP_DEPLOY_ON_MISSING_SECRETS }}'
+      SKIP_APP_BUILD: '{{ default true .SKIP_APP_BUILD }}'
+
+      SWA_ARG_ACTION: '{{ default "run" .ACTION }}'
+      SWA_ARG_APP_LOCATION: '{{ if ne .DOCKER_APP_LOCATION "" }}--app "{{ .DOCKER_APP_LOCATION }}"{{ end }}'
+      SWA_ARG_DATA_API_LOCATION: '{{ if ne .INPUT_DATA_API_LOCATION "" }}--dataApi "{{ .INPUT_DATA_API_LOCATION }}"{{ end }}'
+      SWA_ARG_APP_ARTIFACT_LOCATION: '{{ if ne .INPUT_APP_ARTIFACT_LOCATION "" }}--appArtifactLocation "{{ .INPUT_APP_ARTIFACT_LOCATION }}"{{ end }}'
+      SWA_ARG_WORK_DIR: '{{ if ne .DOCKER_APP_LOCATION "" }}--workdir "{{ .DOCKER_APP_LOCATION }}"{{ end }}'
+      SWA_ARG_DEPLOYMENT_ACTION: '{{ if eq .ARG_ACTION "upload" }}--deploymentaction "{{ .ARG_ACTION }}"{{ end }}'
+      SWA_ARG_AZURE_API_TOKEN: '{{ if .AZURE_STATIC_WEB_APPS_API_TOKEN }}--apiToken "{{ .AZURE_STATIC_WEB_APPS_API_TOKEN }}"{{ end }}'
+
+      SWA_DEFAULT_ARGS: >-
+        {{ .SWA_ARG_ACTION }}
+        {{ .SWA_ARG_DEPLOYMENT_ACTION }}
+        {{ .SWA_ARG_APP_LOCATION }}
+        {{ .SWA_ARG_APP_ARTIFACT_LOCATION }}
+        {{ .SWA_ARG_DATA_API_LOCATION }}
+        {{ .SWA_ARG_AZURE_API_TOKEN }}
+      SWA_ARGUMENTS: '{{ coalesce .CLI_ARGS .SWA_DEFAULT_ARGS "" }}'
     cmds:
+      - cmd: docker stop -f "{{ .DOCKER_CONTAINER_NAME }}"
+        ignore_error: true
+      - cmd: docker rm -f "{{ .DOCKER_CONTAINER_NAME }}"
+        ignore_error: true
       - cmd: >-
           docker run
-          --rm {{ .ARG_INTERACTIVE }}
+          --rm
+          {{ .DOCKER_ARG_INTERACTIVE }}
+          --restart no
           --volume "{{ .TASKFILE_DIR }}":"{{ .DOCKER_APP_LOCATION }}"
           --volume "{{ .TASKFILE_DIR }}/src/":"/admin/"
-          --restart=no
+          --log-opt "max-size=10m"
+          --log-opt "max-file=3"
           --log-driver local
-          --log-opt max-size=10m
-          --log-opt max-file=3
-          --name "{{ .DOCKER_IMAGE_NAME }}"
-          {{ .ARG_WORK_DIR }}
-          "{{ .DOCKER_IMAGE }}"
-          {{ .ARGS }}
+          --name "{{ .DOCKER_CONTAINER_NAME }}"
+          "{{ .DOCKER_IMAGE_TAG }}"
+          {{ .SWA_ARGUMENTS }}
+      - cmd: docker wait "{{ .DOCKER_CONTAINER_NAME }}"
+        ignore_error: true
 
   static-apps-client:
     aliases: [sac, swa, s]
