@@ -86,8 +86,8 @@ runs:
 
         RAW_INPUTS_REPO_TOKEN: ${{ inputs.repo_token }}
         RAW_INPUTS_APP_LOCATION: ${{ inputs.app_location }}
-        RAW_INPUTS_APP_ARTIFACT_LOCATION: ${{ inputs.app_artifact_location }}
-        RAW_INPUTS_DATA_API_LOCATION: ${{ inputs.app_artifact_location }}
+        RAW_INPUTS_APP_ARTIFACT_LOCATION: ${{ inputs.app_artifact_location || inputs.output_location }}
+        RAW_INPUTS_DATA_API_LOCATION: ${{ inputs.data_api_location }}
         RAW_INPUTS_ACTION: ${{ inputs.action}}
         RAW_INPUTS_AZURE_STATIC_WEB_APPS_API_TOKEN: ${{ inputs.azure_static_web_apps_api_token || null }}
         RAW_INPUTS_SKIP_DEPLOY_ON_MISSING_SECRETS: ${{ inputs.skip_deploy_on_missing_secrets == 'true' && '--skipDeployOnMissingSecrets' || null }}
@@ -140,10 +140,11 @@ runs:
             echo "TA_CLI_SKIP_DEPLOY_ON_MISSING_SECRETS=$RAW_INPUTS_SKIP_DEPLOY_ON_MISSING_SECRETS"
             echo "TA_CLI_SKIP_APP_BUILD=$RAW_INPUTS_SKIP_APP_BUILD"
 
-            [ -n "${RAW_INPUTS_AZURE_STATIC_WEB_APPS_API_TOKEN:-}" ] \
-              && echo "TA_CLI_AZURE_STATIC_WEB_APPS_API_TOKEN=--apiToken \"$RAW_INPUTS_AZURE_STATIC_WEB_APPS_API_TOKEN\"" \
-              || echo "TA_CLI_AZURE_STATIC_WEB_APPS_API_TOKEN="
-            echo "AZURE_STATIC_WEB_APPS_API_TOKEN=${RAW_INPUTS_AZURE_STATIC_WEB_APPS_API_TOKEN:-}"
+            AZURE_STATIC_WEB_APPS_API_TOKEN="${RAW_INPUTS_AZURE_STATIC_WEB_APPS_API_TOKEN:-$AZURE_STATIC_WEB_APPS_API_TOKEN}"
+            echo "AZURE_STATIC_WEB_APPS_API_TOKEN=${AZURE_STATIC_WEB_APPS_API_TOKEN}"
+            [ -n "$AZURE_STATIC_WEB_APPS_API_TOKEN" ] &&
+              echo "TA_CLI_AZURE_STATIC_WEB_APPS_API_TOKEN=--apiToken \"$AZURE_STATIC_WEB_APPS_API_TOKEN\"" ||
+              echo "TA_CLI_AZURE_STATIC_WEB_APPS_API_TOKEN="
           fi
         }
         write_env | tee -a "${GITHUB_OUTPUT:-./.env.action_output}"
@@ -200,6 +201,7 @@ runs:
           ${{ steps.globals.outputs.TA_CLI_SKIP_DEPLOY_ON_MISSING_SECRETS }}
           ${{ steps.globals.outputs.TA_CLI_SKIP_APP_BUILD }}
           ${{ steps.globals.outputs.TA_CLI_INPUT_ACTION }}
+          ${{ steps.globals.outputs.TA_CLI_APP_DEPLOYMENT_ACTION }}
       run: >-
         docker run --rm
         -v "$WORKSPACE_LOCAL_PATH":"$WORKSPACE_DOCKER_PATH"
