@@ -53,66 +53,76 @@ function run_command() {
 
   echo "##[cmd] $(realpath "$0" || readlink -f "$0" || $0) $*"
 
-  local SUPPORTED_COMMANDS=(run upload close help version)
-  local ARG_SHELL_PASSTHROUGH=0
-  local ARG_FOUND_APP=0
-  local INPUT_ARGS=("$@")
-  local OUTPUT_ARGS=()
-  local OUTPUT_ACTION=""
-  local SWA_APP_NAME=StaticSitesClient
+  local swa_supported_commands=(run upload close help version)
+  local swa_app_name=StaticSitesClient
 
-  for argument in "${INPUT_ARGS[@]}"; do
-    if [ ${#OUTPUT_ARGS[@]} -eq 0 ] && [[ X${argument:-} == Xsh* ]] || [[ X${argument:-} == Xbash* ]]; then
-      ARG_SHELL_PASSTHROUGH=1
+  local arg_use_shell_passthrough=0
+  local arg_found_swa_app=0
+  local input_arguments=("$@")
+  local output_arguments=()
+  local output_action=""
+
+  for argument in "${input_arguments[@]}"; do
+    if [ ${#output_arguments[@]} -eq 0 ] && [[ X${argument:-} == Xsh* ]] || [[ X${argument:-} == Xbash* ]]; then
+      arg_use_shell_passthrough=1
     fi
 
     if [ -n "${argument}" ]; then
-      OUTPUT_ARGS+=("${argument}")
+      output_arguments+=("${argument}")
 
-      if [[ X${argument} == *X${SWA_APP_NAME}* ]]; then
-        ARG_FOUND_APP=1
+      if [[ X${argument} == *X${swa_app_name}* ]]; then
+        arg_found_swa_app=1
       fi
 
-      if [[ " ${SUPPORTED_COMMANDS[*]} " =~ [[:space:]]${argument}[[:space:]] ]]; then
-        OUTPUT_ACTION="${argument}"
+      if [[ " ${swa_supported_commands[*]} " =~ [[:space:]]${argument}[[:space:]] ]]; then
+        output_action="${argument}"
       fi
     fi
   done
 
   if [ "$(pwd)" = "/" ]; then
-    cd /root/build ||
-      cd "${SWA_DIR}" ||
-      cd /workspace ||
-      cd /github/workspace ||
-      cd /bin/staticsites
+    cd "${WORKSPACE_DOCKER_PATH:-}" ||
+      cd "${SWA_DIR:-}" ||
+      cd /admin/ ||
+      cd /root/build/ ||
+      cd /workspace/ ||
+      cd /github/workspace/ ||
+      cd /bin/staticsites/ || true
   fi
 
-  local SWA_DIR="${SWA_DIR:-./.bin/}"
-  if [ ! -e "${SWA_DIR}/${SWA_APP_NAME}" ]; then
-    SWA_DIR="/bin/staticsites"
+  local swa_root_path="${SWA_DIR:-./.bin/}"
+  if [ ! -e "${swa_root_path}/${swa_app_name}" ]; then
+    swa_root_path="/bin/staticsites"
+  fi
+  if [ ! -d "${swa_root_path}" ]; then
+    swa_root_path="$(pwd)"
   fi
 
-  export PATH="${SWA_DIR}:/bin/staticsites:~/.local/share/fnm/:/admin/${PATH+:$PATH}"
+  export PATH="${swa_root_path}:/bin/staticsites:~/.local/share/fnm/:/admin/${PATH+:$PATH}"
 
-  if [[ -z "$OUTPUT_ACTION" ]] && [[ $ARG_SHELL_PASSTHROUGH == 0 ]]; then
-    OUTPUT_ACTION="run"
-    OUTPUT_ARGS+=("${OUTPUT_ACTION}")
+  if [[ -z "$output_action" ]] && [[ $arg_use_shell_passthrough == 0 ]]; then
+    output_action="run"
+    output_arguments+=("${output_action}")
     echo "[WARNING] No action specified so appended default 'run' action."
   fi
 
-  if [[ ! " ${OUTPUT_ARGS[*]} " =~ [[:space:]]--verbose[[:space:]] ]] && [[ $ARG_SHELL_PASSTHROUGH == 0 ]] && [[ ! "$OUTPUT_ACTION" = "version" ]]; then
-    OUTPUT_ARGS+=(--verbose)
+  if [[ ! " ${output_arguments[*]} " =~ [[:space:]]--verbose[[:space:]] ]] && [[ $arg_use_shell_passthrough == 0 ]] && [[ ! "$output_action" = "version" ]]; then
+    output_arguments+=(--verbose)
     echo "[INFO] Enabled verbose logging."
   fi
 
-  local SWA_APP_PATH="${SWA_DIR}/${SWA_APP_NAME}"
-  if [[ $ARG_SHELL_PASSTHROUGH == 1 ]]; then
-    echo "No recognized action specified, so passed all arguments to shell directly: '${OUTPUT_ARGS[*]}'"
-  elif [[ $ARG_FOUND_APP == 1 ]]; then
-    printf "[INFO] Found '%s' executable. Skipped prepending executable to argument list.\n" "${SWA_APP_PATH}"
+  local swa_app_path
+  if ! swa_app_path="$(command -v "${swa_app_name}")"; then
+    swa_app_path="${swa_root_path}/${swa_app_name}"
+  fi
+
+  if [[ $arg_use_shell_passthrough == 1 ]]; then
+    echo "No recognized action specified, so passed all arguments to shell directly: '${output_arguments[*]}'"
+  elif [[ $arg_found_swa_app == 1 ]]; then
+    printf "[INFO] Found '%s' executable. Skipped prepending executable to argument list.\n" "${swa_app_path}"
   else
-    OUTPUT_ARGS=("${SWA_APP_PATH}" "${OUTPUT_ARGS[@]}")
-    printf "[INFO] Prepended '%s' executable to command list.\n" "${SWA_APP_PATH}"
+    output_arguments=("${swa_app_path}" "${output_arguments[@]}")
+    printf "[INFO] Prepended '%s' executable to command list.\n" "${swa_app_path}"
   fi
 
   current_dir="$(pwd)"
@@ -133,16 +143,16 @@ function run_command() {
   echo "##[endgroup]"
 
   local result=0
-  echo "##[cmd] ${OUTPUT_ARGS[*]}"
-  if [[ $ARG_SHELL_PASSTHROUGH == 0 ]] && [ ! -f "${SWA_APP_PATH}" ]; then
-    echo "[error] Skipped command due to missing '${SWA_APP_NAME}' executable."
+  echo "##[cmd] ${output_arguments[*]}"
+  if [[ $arg_use_shell_passthrough == 0 ]] && [ ! -f "${swa_app_path}" ]; then
+    echo "[error] Skipped command due to missing '${swa_app_name}' executable."
     result=80
   else
     echo "{{BEGIN}} Command Output"
     echo "---------------------------------------"
     local _build_dir="${current_dir}/.build"
     mkdir -p ./.build || true
-    if "${OUTPUT_ARGS[@]}" | tee -a "./.build/static-sites-$(date +%s).log"; then
+    if "${output_arguments[@]}" | tee -a "./.build/static-sites-$(date +%s).log"; then
       :
     else
       result=$?
