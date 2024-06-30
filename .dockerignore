@@ -1,6 +1,6 @@
-.env/
-.env
-.env.*
+#
+# static-web-apps-deploy | Docker ignore list
+#
 
 node_modules/
 .task/
@@ -9,7 +9,9 @@ node_modules/
 .github/
 .git/
 
+.env/
+.env
+.env.*
 .env*
 .flaskenv*
-!.env.project
 !.env.vault

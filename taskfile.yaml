@@ -25,10 +25,38 @@ vars:
 
   DOTENV_VAULT: npx --yes dotenv-vault@latest
 
+  DOCKER_IMAGE_STATIC_WEB_APPS_CLIENT: "static-web-apps-client"
+
 tasks:
   default:
     cmds:
       - task: build
+
+  get-static-sites-client:
+    vars:
+      PLATFORM: '{{ default "linux" .PLATFORM }}'
+      OUTPUT_DIR: '{{.TASKFILE_DIR}}/bin/docker'
+      ARRAY: 'linux darwin windows'
+      COPY_COMMANDS: |-
+        cp -r /bin/staticsites/ /docker/bin/
+        cp /entrypoint.sh /docker/
+        cp /bin/staticsites/StaticSitesClient /docker/
+    status:
+      - test -d "{{ .OUTPUT_DIR }}"
+      - test -f "{{ .OUTPUT_DIR }}/entrypoint.sh"
+      - test -f "{{ .OUTPUT_DIR }}/StaticSitesClient"
+      - test -f "{{ .OUTPUT_DIR }}/bin/staticsites/StaticSitesClient.dll"
+    cmds:
+      - cmd: cmd.exe /d /c rmdir /q /s "{{ .OUTPUT_DIR | fromSlash }}" || true
+      - cmd: cmd.exe /d /c mkdir "{{ .OUTPUT_DIR | fromSlash }}" || true
+      - cmd: cmd.exe /d /c mkdir "{{ joinPath .OUTPUT_DIR "bin" | fromSlash }}" || true
+      - cmd: cmd.exe /d /c mkdir "{{ joinPath .OUTPUT_DIR "bin" "staticsites" | fromSlash }}" || true
+      - cmd: >-
+          docker run --rm --platform="{{.PLATFORM}}/amd64"
+          -v "{{ fromSlash .OUTPUT_DIR }}":/docker
+          -it
+          mcr.microsoft.com/appsvc/staticappsclient:stable
+          /bin/bash -c "{{ splitList "\n" .COPY_COMMANDS | uniq | join " && " }}"
 
   get-install-brew-script:
     deps: [init-build-directory]
