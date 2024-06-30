@@ -59,6 +59,26 @@ RUN (touch "$HOME/.bash_profile" "$HOME/.bashrc" &>/dev/null || true) \
 RUN fnm install --lts
 RUN npm install -g npm@latest
 
+# # Alternative approach is to copy binaries from intermediate folder where we extract
+# # the binaries from the 'mcr.microsoft.com/appsvc/staticappsclient:stable' image.
+# FROM static-app-client AS builder
+# COPY ./bin/docker/bin/staticsites/ /bin/staticsites/*
+# COPY ./bin/docker/entrypoint.sh /entrypoint.sh
+# COPY ./bin/docker/StaticSitesClient /StaticSitesClient
+#
+# FROM mcr.microsoft.com/oryx/build:azfunc-jamstack-debian-bullseye-20231128.3 AS oryx
+# ENV ORYX_PATH "$PATH"
+# ENV SWA_SKIP_CLEANUP "true"
+#
+# FROM oryx AS prod
+# COPY --from=builder /bin/staticsites/ /bin/staticsites/*
+# COPY --from=builder /entrypoint.sh /entrypoint.sh
+# RUN chmod +x /bin/staticsites/StaticSitesClient
+# RUN chmod +x /entrypoint.sh
+# CMD ["/bin/bash"]
+#
+# FROM static-app-client AS static-app-client-prod
+
 COPY --chmod=a+x "./src/entrypoint.sh" "/admin/entrypoint.sh"
 RUN echo 'export PATH="/bin/staticsites/:/admin:/workspace:/root/build${PATH+:$PATH}"' >> "$HOME/.bash_profile"
 ENTRYPOINT ["/admin/entrypoint.sh"]
