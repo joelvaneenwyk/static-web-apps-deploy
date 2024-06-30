@@ -1,6 +1,11 @@
 # yaml-language-server: $schema=https://json.schemastore.org/taskfile.json
-# https://taskfile.dev
-# brew install go-task
+#
+# See https://taskfile.dev/installation/ for install instructions.
+#
+#   $> brew install go-task/tap/go-task
+#   $> scoop install task
+#   $> pkgx task
+#   $> sudo snap install task --classic
 
 version: '3'
 
