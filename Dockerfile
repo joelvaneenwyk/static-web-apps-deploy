@@ -79,7 +79,7 @@ RUN npm install -g npm@latest
 #
 # FROM static-app-client AS static-app-client-prod
 
-COPY --chmod=a+x "./src/entrypoint.sh" "/admin/entrypoint.sh"
+COPY --chmod=0755 "./src/entrypoint.sh" "/admin/entrypoint.sh"
 RUN echo 'export PATH="/bin/staticsites/:/admin:/workspace:/root/build${PATH+:$PATH}"' >> "$HOME/.bash_profile"
 ENTRYPOINT ["/admin/entrypoint.sh"]
 SHELL [ "bash", "--login", "-c" ]
