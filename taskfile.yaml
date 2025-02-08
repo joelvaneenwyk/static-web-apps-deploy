@@ -1,3 +1,4 @@
+#!/usr/bin/env task
 # yaml-language-server: $schema=https://json.schemastore.org/taskfile.json
 #
 # See https://taskfile.dev/installation/ for install instructions.
@@ -6,6 +7,8 @@
 #   $> scoop install task
 #   $> pkgx task
 #   $> sudo snap install task --classic
+#
+# cspell:ignore shopt, dotenv, pkgx
 
 version: '3'
 
@@ -30,7 +33,7 @@ vars:
 
   DOTENV_VAULT: npx --yes dotenv-vault@latest
 
-  DOCKER_IMAGE_STATIC_WEB_APPS_CLIENT: "static-web-apps-client"
+  DOCKER_IMAGE_STATIC_WEB_APPS_CLIENT: 'static-web-apps-client'
 
 tasks:
   default:
